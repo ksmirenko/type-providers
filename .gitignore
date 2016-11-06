@@ -251,4 +251,4 @@ paket-files/
 .idea/
 *.sln.iml
 
-/TypeProvidersTypeProviders/debug-config.txt
+/TypeProviders/TypeProviders/debug-config.txt
