@@ -15,13 +15,15 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-module TypeProviders.JsonGraph
+module TypeProviders.PortJsonGraph
 
-open Microsoft.FSharp.Core.CompilerServices
-open Newtonsoft.Json
 open ProviderImplementation.ProvidedTypes
+open Microsoft.FSharp.Core.CompilerServices
 open System
 open System.Reflection
+
+open Newtonsoft.Json
+open Newtonsoft.Json.Linq
 
 // Classes for deserialization
 
@@ -38,8 +40,8 @@ type Node () =
     member val Ports = Collections.Generic.List<Port>() with get, set
 
 // We separate input and output ports as different types
-type InputPort = InputPort of Port
-type OutputPort = OutputPort of Port
+type InputPort = | InputPort of Port
+type OutputPort = | OutputPort of Port
 
 // A type for specific instances of a node type
 type nodeInstance =
@@ -50,13 +52,13 @@ type nodeInstance =
     }
 
 // A "static constructor" for nodeInstance
-module private NodeInstance =
+module NodeInstance =
     let create node name guid description =
         { Node = node; InstanceId = Id(Name = name, UniqueId = guid); Description = description }
 
 // Deserialize the graph and give access to all nodes and ports
 
-let private nodes = JsonConvert.DeserializeObject<seq<Node>>(IO.File.ReadAllText(@"C:\PortGraph.json"))
+let private nodes = JsonConvert.DeserializeObject<seq<Node>>(IO.File.ReadAllText(@"C:\Temp\PortGraph.json"))
                     |> Seq.map (fun n -> n.Id.UniqueId.ToString(), n)
                     |> Map.ofSeq
 
@@ -77,7 +79,7 @@ let GetPort id = ports.[id]
 type JsonGraphProvider (config : TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces ()
 
-    let ns = "TypeProviders.JsohGraph.Provided"
+    let ns = "TypeProviders.PortJsonGraph.Provided"
     let asm = Assembly.GetExecutingAssembly()
 
     let addInputPort (inputs : ProvidedTypeDefinition) (port : Port) =
@@ -86,7 +88,7 @@ type JsonGraphProvider (config : TypeProviderConfig) as this =
                         typeof<InputPort>, 
                         GetterCode = fun args -> 
                             let id = port.Id.UniqueId.ToString()
-                            <@@ GetPort id |> InputPort @@>) // note: accessing private helper method GetPort
+                            <@@ GetPort id |> InputPort @@>)
         inputs.AddMember(port)
 
     let addOutputPort (outputs : ProvidedTypeDefinition) (port : Port) =
@@ -101,7 +103,7 @@ type JsonGraphProvider (config : TypeProviderConfig) as this =
     // adds ports from a sequence to generated type definitions
     let addPorts inputs outputs (portList : seq<Port>) =
         portList
-        |> Seq.iter (fun port ->
+        |> Seq.iter (fun port -> 
                         match port.Type with
                         | "input" -> addInputPort inputs port
                         | "output" -> addOutputPort outputs port
@@ -117,13 +119,13 @@ type JsonGraphProvider (config : TypeProviderConfig) as this =
                         ProvidedParameter("Description", typeof<string>)
                     ],
                     InvokeCode =
-                        (fun args ->
+                        fun args ->
                             match args with
-                            | [name; uniqueId; descr] ->
+                            | [name; uniqueId; description] ->
                                 <@@
-                                    NodeInstance.create (GetNode id) (%%name:string) (%%uniqueId:Guid) (%%descr:string)
+                                    NodeInstance.create (GetNode id) (%%name:string) (%%uniqueId:Guid) (%%description:string)
                                 @@>
-                            | _ -> failwithf "Invalid constructor arguments %A" args))
+                            | _ -> failwithf "Invalid constructor arguments %A" args)
         nodeType.AddMember(ctor)
 
         let inputs = ProvidedTypeDefinition("Inputs", Some typeof<obj>)
@@ -139,7 +141,7 @@ type JsonGraphProvider (config : TypeProviderConfig) as this =
         addPorts inputs outputs node.Ports
 
         // Add the inputs and outputs types of nested types under the Node type
-        nodeType.AddMembers([inputs; outputs])
+        nodeType.AddMembers([inputs;outputs])
 
         // Add some instance properties to expose them on a node instance
         let inputPorts = ProvidedProperty("InputPorts", inputs, [],

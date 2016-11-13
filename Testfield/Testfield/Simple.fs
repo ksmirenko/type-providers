@@ -1,6 +1,4 @@
-﻿#time "on"
-// must be built prior to launching or even editing this file in VS
-(*#r @"../../TypeProviders/TypeProviders/bin/Release/TypeProviders.dll"
+﻿module Simple
 
 open TypeProviders.Simple.Provided
 
@@ -15,4 +13,3 @@ printfn "1:\t%A\n" simple
 let simple1 = SimpleType "Gaben"
 printfn "2:\t%A\n" simple1
 printfn "\t%A\n" simple1.Info
-*)

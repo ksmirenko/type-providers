@@ -78,7 +78,7 @@
             "Type":"output"
          }
       ]
-   }
+   },
    {
       "Id":{
          "Name":"CrossNode",
@@ -113,7 +113,7 @@
             },
             "Type":"output"
          }
-      ]
+      ],
       "Description":"This node is 100% more awesome than others"
    }
 ]

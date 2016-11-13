@@ -2,7 +2,7 @@
 // must be built prior to launching or even editing this file in VS
 #r @"../../TypeProviders/TypeProviders/bin/Release/TypeProviders.dll"
 
-(*open TypeProviders.Simple.Provided
+open TypeProviders.Simple.Provided
 
 // test static property
 printfn "%A\n" SimpleType.Hello
@@ -15,4 +15,3 @@ printfn "1:\t%A\n" simple
 let simple1 = SimpleType "Gaben"
 printfn "2:\t%A\n" simple1
 printfn "\t%A\n" simple1.Info
-*)

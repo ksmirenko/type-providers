@@ -68,8 +68,8 @@
     <Compile Include="ProvidedTypes.fs" />
     <Compile Include="DebugProvidedTypes.fs" />
     <Compile Include="Simple.fs" />
+    <Compile Include="PortJsonGraph.fs" />
     <Content Include="packages.config" />
-    <Compile Include="JsonGraph.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
