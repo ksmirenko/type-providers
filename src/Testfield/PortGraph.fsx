@@ -1,6 +1,6 @@
 ﻿#time "on"
 // must be built prior to launching or even editing this file in Visual Studio
-#r @"../../TypeProviders/TypeProviders/bin/Release/TypeProviders.dll"
+#r @"../TypeProviders/bin/Release/TypeProviders.dll"
 
 open TypeProviders.PortJsonGraph
 open System
