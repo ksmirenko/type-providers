@@ -251,4 +251,7 @@ paket-files/
 .idea/
 *.sln.iml
 
+# macOS
+.DS_Store
+
 /TypeProviders/TypeProviders/debug-config.txt
