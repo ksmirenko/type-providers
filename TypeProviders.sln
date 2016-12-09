@@ -5,12 +5,6 @@ VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TypeProviders", "src\TypeProviders\TypeProviders.fsproj", "{FD321302-D712-4607-81B3-30D320C6BDD5}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "OpenCLProvider", "src\OpenCLProvider\OpenCLProvider.fsproj", "{144320DA-C5F8-41F9-9FBC-DC8DAA4F21A5}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Brahma.FSharp.OpenCL.AST", "src\Brahma.FSharp.OpenCL.AST\Brahma.FSharp.OpenCL.AST.fsproj", "{E0388E66-E36C-4ECA-ADCC-BFD115820C25}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenCL", "OpenCL", "{E59B0D12-F4A5-4B58-AD71-67B50B26A330}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,20 +15,8 @@ Global
 		{FD321302-D712-4607-81B3-30D320C6BDD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD321302-D712-4607-81B3-30D320C6BDD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD321302-D712-4607-81B3-30D320C6BDD5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{144320DA-C5F8-41F9-9FBC-DC8DAA4F21A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{144320DA-C5F8-41F9-9FBC-DC8DAA4F21A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{144320DA-C5F8-41F9-9FBC-DC8DAA4F21A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{144320DA-C5F8-41F9-9FBC-DC8DAA4F21A5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E0388E66-E36C-4ECA-ADCC-BFD115820C25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E0388E66-E36C-4ECA-ADCC-BFD115820C25}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E0388E66-E36C-4ECA-ADCC-BFD115820C25}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E0388E66-E36C-4ECA-ADCC-BFD115820C25}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{144320DA-C5F8-41F9-9FBC-DC8DAA4F21A5} = {E59B0D12-F4A5-4B58-AD71-67B50B26A330}
-		{E0388E66-E36C-4ECA-ADCC-BFD115820C25} = {E59B0D12-F4A5-4B58-AD71-67B50B26A330}
 	EndGlobalSection
 EndGlobal
