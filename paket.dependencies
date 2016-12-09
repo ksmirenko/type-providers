@@ -1,0 +1,7 @@
+source https://api.nuget.org/v3/index.json
+framework >= net462
+
+nuget FSharp.Core redirects: force
+nuget FSharp.TypeProviders.StarterPack 1.1.3.88
+nuget Newtonsoft.Json 9.0.1
+nuget OpenCL.Net 2.2.9.0

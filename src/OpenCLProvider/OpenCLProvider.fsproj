@@ -5,14 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>fd321302-d712-4607-81b3-30d320c6bdd5</ProjectGuid>
+    <ProjectGuid>144320da-c5f8-41f9-9fbc-dc8daa4f21a5</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>TypeProviders</RootNamespace>
-    <AssemblyName>TypeProviders</AssemblyName>
+    <RootNamespace>OpenCLProvider</RootNamespace>
+    <AssemblyName>OpenCLProvider</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Name>TypeProviders</Name>
+    <Name>OpenCLProvider</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,13 +22,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\TypeProviders.XML</DocumentationFile>
-    <StartArguments>
-    </StartArguments>
-    <StartWorkingDirectory>
-    </StartWorkingDirectory>
-    <StartAction>Program</StartAction>
-    <StartProgram>C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\devenv.exe</StartProgram>
+    <DocumentationFile>bin\Debug\OpenCLProvider.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -37,15 +31,28 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\TypeProviders.XML</DocumentationFile>
-    <StartAction>Project</StartAction>
-    <StartProgram>
-    </StartProgram>
-    <StartWorkingDirectory>
-    </StartWorkingDirectory>
-    <StartArguments>
-    </StartArguments>
+    <DocumentationFile>bin\Release\OpenCLProvider.XML</DocumentationFile>
   </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="KernelProvider.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Brahma.FSharp.OpenCL.AST\Brahma.FSharp.OpenCL.AST.fsproj">
+      <Name>Brahma.FSharp.OpenCL.AST</Name>
+      <Project>{e0388e66-e36c-4eca-adcc-bfd115820c25}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -62,30 +69,6 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
-  <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="ProvidedTypes.fsi">
-      <Paket>True</Paket>
-    </Compile>
-    <Compile Include="ProvidedTypes.fs">
-      <Paket>True</Paket>
-    </Compile>
-    <Compile Include="DebugProvidedTypes.fs">
-      <Paket>True</Paket>
-    </Compile>
-    <Compile Include="Simple.fs" />
-    <Compile Include="PortJsonGraph.fs" />
-    <Content Include="paket.references" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
@@ -93,16 +76,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Import Project="..\..\.paket\paket.targets" />
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3')">
-      <ItemGroup>
-        <Reference Include="Newtonsoft.Json">
-          <HintPath>..\..\packages\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
 </Project>

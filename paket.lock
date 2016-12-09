@@ -1,0 +1,7 @@
+FRAMEWORK: >= NET462
+NUGET
+  remote: http://api.nuget.org/v3/index.json
+    FSharp.Core (4.0.0.1) - redirects: force
+    FSharp.TypeProviders.StarterPack (1.1.3.88)
+    Newtonsoft.Json (9.0.1)
+    OpenCL.Net (2.2.9)
