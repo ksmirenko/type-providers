@@ -5,6 +5,28 @@ open Microsoft.FSharp.Core.CompilerServices
 open System
 open System.Reflection
 
+let parseKernel filePath =
+    let parseId _id =
+        match _id with
+        | "int" | "float" -> failwithf "%s is not a valid identifier" _id
+        | _ -> _id
+    let parseType _type =
+        match _type with
+        | "int"     -> typeof<int>
+        | "float"   -> typeof<float>
+        | _         -> failwithf "%s is not a valid type" _type
+    let rec foldParams outList inList =
+        match inList with
+        | [] -> outList |> List.rev
+        | _id::_type::rest ->
+            let id' = parseId _id
+            let type' = parseType _type
+            foldParams (ProvidedParameter(id', type')::outList) rest
+        | _ -> failwith "foldParams failed"
+    match System.IO.File.ReadLines(filePath) |> Seq.toList with
+    | kernelName::paramLines -> kernelName, (foldParams [] paramLines)
+    | _ -> failwith "couldn't parse kernel"
+
 [<TypeProvider>]
 type KernelProvider(config : TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces ()
@@ -17,11 +39,23 @@ type KernelProvider(config : TypeProviderConfig) as this =
     let parameters = [ProvidedStaticParameter("PathToFile", typeof<string>)]
 
     do kernelProvider.DefineStaticParameters(parameters, fun typeName args ->
-        let pathToFile = args.[0] :?> string
+        let filePath = args.[0] :?> string
 
         let provider = ProvidedTypeDefinition(assembly, nspace, typeName, Some typeof<obj>, HideObjectMethods = true)
 
-        // TODO: parse code file, provide a method
+        let kernelName, kernelParams = parseKernel filePath
+
+        let addKernelMethod kerName kerParams =
+            let kernelMethod =
+                ProvidedMethod(
+                    kerName,
+                    kerParams,
+                    typeof<Void>,
+                    InvokeCode = (fun args -> <@@ ignore() @@>)
+                )
+            kernelProvider.AddMember kernelMethod
+
+        addKernelMethod kernelName kernelParams
 
         provider
     )
