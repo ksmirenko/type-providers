@@ -51,8 +51,9 @@ type KernelProvider(config : TypeProviderConfig) as this =
                     kerName,
                     kerParams,
                     typeof<Void>,
-                    InvokeCode = (fun args -> <@@ ignore() @@>)
-                )
+                    InvokeCode = (fun args -> <@@ ignore() @@>),
+                    IsStaticMethod = true
+                  )
             kernelProvider.AddMember kernelMethod
 
         addKernelMethod kernelName kernelParams

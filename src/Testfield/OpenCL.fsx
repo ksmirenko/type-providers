@@ -2,8 +2,6 @@
 
 open TypeProviders.KernelProvider.Provided
 
-type testKernel = KernelProvider<"/Users/ksmirenko/Workspace/type-providers/testkernel.txt">
+type TestKernel = KernelProvider<"/Users/ksmirenko/Workspace/type-providers/testkernel.txt">
 
-let kernel = testKernel()
-
-let providedFun = kernel.myKernel
+let providedFun = TestKernel.MyKernel
