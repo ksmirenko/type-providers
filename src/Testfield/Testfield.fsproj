@@ -54,6 +54,7 @@
     <None Include="App.config" />
     <None Include="Simple.fsx" />
     <None Include="PortGraph.fsx" />
+    <None Include="OpenCL.fsx" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

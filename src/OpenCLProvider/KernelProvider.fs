@@ -5,6 +5,7 @@ open Microsoft.FSharp.Core.CompilerServices
 open System
 open System.Reflection
 
+// A dummy parser
 let parseKernel filePath =
     let parseId _id =
         match _id with
@@ -41,24 +42,24 @@ type KernelProvider(config : TypeProviderConfig) as this =
     do kernelProvider.DefineStaticParameters(parameters, fun typeName args ->
         let filePath = args.[0] :?> string
 
-        let provider = ProvidedTypeDefinition(assembly, nspace, typeName, Some typeof<obj>, HideObjectMethods = true)
+        let retProvider = ProvidedTypeDefinition(assembly, nspace, typeName, Some typeof<obj>, HideObjectMethods = true)
 
         let kernelName, kernelParams = parseKernel filePath
 
+        // Provide a method parametetized exactly as the kernel
         let addKernelMethod kerName kerParams =
             let kernelMethod =
                 ProvidedMethod(
                     kerName,
                     kerParams,
                     typeof<Void>,
-                    InvokeCode = (fun args -> <@@ ignore() @@>),
-                    IsStaticMethod = true
-                  )
-            kernelProvider.AddMember kernelMethod
+                    IsStaticMethod = true,
+                    InvokeCode = (fun args -> <@@ ignore() @@>))
+            retProvider.AddMember kernelMethod
 
         addKernelMethod kernelName kernelParams
 
-        provider
+        retProvider
     )
 
     do

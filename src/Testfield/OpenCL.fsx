@@ -2,6 +2,11 @@
 
 open TypeProviders.KernelProvider.Provided
 
-type TestKernel = KernelProvider<"/Users/ksmirenko/Workspace/type-providers/testkernel.txt">
+type TestKernel = KernelProvider<"testkernel.txt">
 
-let providedFun = TestKernel.MyKernel
+let quotation = <@@
+                    let a = 5
+                    let b = 2.0
+                    let c = -42
+                    TestKernel.MyKernel(a, b, c)
+                @@>
