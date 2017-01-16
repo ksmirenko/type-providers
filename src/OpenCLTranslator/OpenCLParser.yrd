@@ -1,0 +1,76 @@
+{
+open Brahma.FSharp.OpenCL.AST
+}
+
+tokens {
+    _ of string
+}
+
+options {
+    translate = true
+    module = "OpenCLTranslator.Parser"
+    infEpsPath = epsilons
+    pos = uint64
+}
+
+module Main
+
+[<Start>]
+program:
+    funDefs=(function_definition SEMI)+ {
+        let code = List.map (fun (funDef, semi) -> funDef) funDefs
+        (code, vars, returnVal)
+    }
+
+function_definition:
+    declSpecifiers=declaration_specifiers decl=declarator declaration* SEMI // SEMI instead of compound_statement
+
+declaration_specifiers:
+    storage_class_specifier
+	| storage_class_specifier declaration_specifiers
+	| type_specifier
+	| type_specifier declaration_specifiers
+	| type_qualifier
+	| type_qualifier declaration_specifiers
+	| function_specifier
+	| function_specifier declaration_specifiers
+
+storage_class_specifier:
+    TYPEDEF
+	| EXTERN
+	| STATIC
+	| AUTO
+	| REGISTER
+
+type_specifier:
+    VOID
+	| CHAR
+	| SHORT
+	| INT
+	| LONG
+	| FLOAT
+	| DOUBLE
+	| SIGNED
+	| UNSIGNED
+	| BOOL
+	| COMPLEX
+	| IMAGINARY
+	| TYPE_NAME // missing: struct_or_union_specifier, enum_specifier
+
+type_qualifier:
+    CONST
+	| RESTRICT
+	| VOLATILE
+
+function_specifier:
+    INLINE
+
+declaration:
+    declaration_specifiers SEMI
+	| declaration_specifiers init_declarator_list SEMI
+
+init_declarator_list:
+    init_declarator (COMMA init_declarator)*
+
+init_declarator:
+    declarator [ASSIGN initializer]
