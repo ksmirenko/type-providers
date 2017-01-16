@@ -8,5 +8,5 @@ let quotation = <@@
                     let a = 5
                     let b = 2.0
                     let c = -42
-                    TestKernel.MyKernel(a, b, c)
+                    TestKernel.SampleFunc(a, b, c)
                 @@>
