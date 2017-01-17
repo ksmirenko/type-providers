@@ -2,6 +2,26 @@
 open Brahma.FSharp.OpenCL.AST
 }
 
+info {
+    C99 keywords:
+        auto break case char const continue default do double else enum extern
+        float for goto if inline int long register restrict return short signed
+        sizeof static struct switch typedef union unsigned void volatile while
+        _Bool _Complex _Imaginary
+    OpenCL C 2.0 keywords:
+        Data types: (see below)
+        Address space qualifiers:
+            __global global __local local
+            __constant constant __private private
+            __generic generic // reserved
+        Function qualifiers:
+            __kernel kernel
+        Access qualifiers:
+            __read_only read_only __write_only write_only __read_write read_write.
+        Additional:
+            uniform pipe
+}
+
 tokens {
     _ of string
 }
@@ -17,45 +37,45 @@ module Main
 
 [<Start>]
 program:
-    funDefs=(function_definition SEMI)+ {
-        let code = List.map (fun (funDef, semi) -> funDef) funDefs
-        (code, vars, returnVal)
-    }
+    funDefs=function_definition+ { funDefs }
 
 function_definition:
-    declSpecifiers=declaration_specifiers decl=declarator declaration* SEMI // SEMI instead of compound_statement
+    declaration_specifier+ declarator declaration* ';' // semicolon instead of compound_statement
 
-declaration_specifiers:
-    storage_class_specifier
-	| storage_class_specifier declaration_specifiers
-	| type_specifier
-	| type_specifier declaration_specifiers
-	| type_qualifier
-	| type_qualifier declaration_specifiers
-	| function_specifier
-	| function_specifier declaration_specifiers
+// Declaration specifiers
+
+declaration_specifier:
+    function_qualifier
+    | storage_class_specifier
+    | type_specifier
+    | type_qualifier
+    | function_specifier
+
+function_qualifier:
+    KERNEL // we ignore __attribute__ qualifiers
 
 storage_class_specifier:
     TYPEDEF
-	| EXTERN
-	| STATIC
-	| AUTO
-	| REGISTER
+	| EXTERN // only for functions and global variables declared in program scope or variables declared inside a function
+	| STATIC // only for non-kernel functions, global variables declared in program scope and variables inside a function declared in the global or constant address space
 
 type_specifier:
-    VOID
-	| CHAR
-	| SHORT
-	| INT
-	| LONG
-	| FLOAT
-	| DOUBLE
-	| SIGNED
-	| UNSIGNED
-	| BOOL
-	| COMPLEX
-	| IMAGINARY
-	| TYPE_NAME // missing: struct_or_union_specifier, enum_specifier
+    BOOL | CHAR | SHORT | INT | LONG
+    | UCHAR | USHORT | UINT | ULONG
+    | SIGNED | UNSIGNED
+	| SIZE_T | PTRDIFF_T | INTPTR_T | UINTPTR_T
+	| VOID
+    | CHAR2 | UCHAR2 | SHORT2 | USHORT2 | INT2 | UINT2 | LONG2 | ULONG2 | FLOAT2 | DOUBLE2
+    | CHAR3 | UCHAR3 | SHORT3 | USHORT3 | INT3 | UINT3 | LONG3 | ULONG3 | FLOAT3 | DOUBLE3
+    | CHAR4 | UCHAR4 | SHORT4 | USHORT4 | INT4 | UINT4 | LONG4 | ULONG4 | FLOAT4 | DOUBLE4
+    | CHAR8 | UCHAR8 | SHORT8 | USHORT8 | INT8 | UINT8 | LONG8 | ULONG8 | FLOAT8 | DOUBLE8
+    | CHAR16 | UCHAR16 | SHORT16 | USHORT16 | INT16 | UINT16 | LONG16 | ULONG16 | FLOAT16 | DOUBLE16
+    | IMAGE2D_T | IMAGE3D_T | IMAGE2D_ARRAY_T | IMAGE1D_T
+    | IMAGE1D_BUFFER_T | IMAGE1D_ARRAY_T | IMAGE2D_DEPTH_T | IMAGE2D_ARRAY_DEPTH_T
+    | SAMPLER_T | QUEUE_T | NDRANGE_T
+    | CLK_EVENT_T | RESERVE_ID_T | EVENT_T
+    | CL_MEM_FENCE_FLAGS // omitted: reserved data types (OpenCL C 2.0, section 6.1.4)
+	| TYPE_NAME | struct_or_union_specifier | enum_specifier
 
 type_qualifier:
     CONST
@@ -65,12 +85,115 @@ type_qualifier:
 function_specifier:
     INLINE
 
+// Declarator
+
+declarator:
+    pointer? direct_declarator
+
+direct_declarator:
+    IDENTIFIER
+	| '(' declarator ')'
+	| direct_declarator '[' type_qualifier+ assignment_expression ']'
+	| direct_declarator '[' type_qualifier+ ']'
+	| direct_declarator '[' assignment_expression ']'
+	| direct_declarator '[' STATIC type_qualifier+ assignment_expression ']'
+	| direct_declarator '[' type_qualifier+ STATIC assignment_expression ']'
+	| direct_declarator '[' type_qualifier+ '*' ']'
+	| direct_declarator '[' '*' ']'
+	| direct_declarator '[' ']'
+	| direct_declarator '(' parameter_list ')'
+	| direct_declarator '(' identifier_list ')'
+	| direct_declarator '(' ')'
+
+pointer:
+    '*'
+	| '*' type_qualifier+
+	| '*' pointer
+	| '*' type_qualifier+ pointer
+
+parameter_list:
+    parameter_declaration (',' parameter_declaration)*
+
+parameter_declaration:
+    declaration_specifier+ declarator
+	| declaration_specifier+ abstract_declarator
+	| declaration_specifier+
+
+identifier_list:
+    IDENTIFIER (',' IDENTIFIER)*
+
+// Declaration
+
 declaration:
-    declaration_specifiers SEMI
-	| declaration_specifiers init_declarator_list SEMI
+    declaration_specifier+ init_declarator_list? ';'
 
 init_declarator_list:
-    init_declarator (COMMA init_declarator)*
+    init_declarator (',' init_declarator)*
 
 init_declarator:
-    declarator [ASSIGN initializer]
+    declarator // omitted: declarator '=' initializer
+
+// Struct-or-union specifier (used in type_specifier)
+
+struct_or_union_specifier:
+    struct_or_union IDENTIFIER '{' struct_declaration+ '}'
+	| struct_or_union '{' struct_declaration+ '}'
+	| struct_or_union IDENTIFIER
+
+struct_or_union:
+    STRUCT
+	| UNION
+
+struct_declaration:
+    specifier_qualifier+ struct_declarator_list ';'
+
+specifier_qualifier:
+	type_specifier
+	| type_qualifier
+
+struct_declarator_list:
+    struct_declarator (',' struct_declarator)*
+
+struct_declarator:
+    declarator
+	| declarator? ':' constant_expression
+
+// Enum specifier (used in type_specifier)
+
+enum_specifier
+	: ENUM '{' enumerator_list '}'
+	| ENUM IDENTIFIER '{' enumerator_list '}'
+	| ENUM '{' enumerator_list ',' '}'
+	| ENUM IDENTIFIER '{' enumerator_list ',' '}'
+	| ENUM IDENTIFIER
+
+enumerator_list
+	: enumerator
+	| enumerator_list ',' enumerator
+
+enumerator
+	: IDENTIFIER
+	| IDENTIFIER '=' constant_expression
+
+// Abstract declarator (used in parameter_declaration)
+
+abstract_declarator:
+    pointer
+	| direct_abstract_declarator
+	| pointer direct_abstract_declarator
+
+direct_abstract_declarator:
+    '(' abstract_declarator ')'
+	| '[' ']'
+	| '[' assignment_expression ']'
+	| direct_abstract_declarator '[' ']'
+	| direct_abstract_declarator '[' assignment_expression ']'
+	| '[' '*' ']'
+	| direct_abstract_declarator '[' '*' ']'
+	| '(' ')'
+	| '(' parameter_list ')'
+	| direct_abstract_declarator '(' ')'
+	| direct_abstract_declarator '(' parameter_list ')'
+
+// TODO: assignment_expression (used in direct_declarator, direct_abstract_declarator)
+// TODO: constant_expression (used in struct_declarator, enumerator)
