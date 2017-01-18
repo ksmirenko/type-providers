@@ -13,11 +13,11 @@ info {
         Address space qualifiers:
             __global global __local local
             __constant constant __private private
-            __generic generic // reserved
+            __generic generic (* reserved *)
         Function qualifiers:
             __kernel kernel
         Access qualifiers:
-            __read_only read_only __write_only write_only __read_write read_write.
+            __read_only read_only __write_only write_only __read_write read_write
         Additional:
             uniform pipe
 }
@@ -37,12 +37,12 @@ module Main
 
 [<Start>]
 program:
-    funDefs=function_definition+ { funDefs }
+    function_definition+
 
 function_definition:
-    declaration_specifier+ declarator declaration* ';' // semicolon instead of compound_statement
+    declaration_specifier+ declarator declaration* ';' (* semicolon instead of compound_statement *)
 
-// Declaration specifiers
+(* Declaration specifiers *)
 
 declaration_specifier:
     function_qualifier
@@ -52,19 +52,19 @@ declaration_specifier:
     | function_specifier
 
 function_qualifier:
-    KERNEL // we ignore __attribute__ qualifiers
+    KERNEL (* omitted:__attribute__ qualifiers *)
 
 storage_class_specifier:
     TYPEDEF
-	| EXTERN // only for functions and global variables declared in program scope or variables declared inside a function
-	| STATIC // only for non-kernel functions, global variables declared in program scope and variables inside a function declared in the global or constant address space
+    | EXTERN (* only for functions and global variables declared in program scope or variables declared inside a function *)
+    | STATIC (* only for non-kernel functions, global variables declared in program scope and variables inside a function declared in the global or constant address space *)
 
 type_specifier:
     BOOL | CHAR | SHORT | INT | LONG
     | UCHAR | USHORT | UINT | ULONG
     | SIGNED | UNSIGNED
-	| SIZE_T | PTRDIFF_T | INTPTR_T | UINTPTR_T
-	| VOID
+    | SIZE_T | PTRDIFF_T | INTPTR_T | UINTPTR_T
+    | VOID
     | CHAR2 | UCHAR2 | SHORT2 | USHORT2 | INT2 | UINT2 | LONG2 | ULONG2 | FLOAT2 | DOUBLE2
     | CHAR3 | UCHAR3 | SHORT3 | USHORT3 | INT3 | UINT3 | LONG3 | ULONG3 | FLOAT3 | DOUBLE3
     | CHAR4 | UCHAR4 | SHORT4 | USHORT4 | INT4 | UINT4 | LONG4 | ULONG4 | FLOAT4 | DOUBLE4
@@ -74,55 +74,55 @@ type_specifier:
     | IMAGE1D_BUFFER_T | IMAGE1D_ARRAY_T | IMAGE2D_DEPTH_T | IMAGE2D_ARRAY_DEPTH_T
     | SAMPLER_T | QUEUE_T | NDRANGE_T
     | CLK_EVENT_T | RESERVE_ID_T | EVENT_T
-    | CL_MEM_FENCE_FLAGS // omitted: reserved data types (OpenCL C 2.0, section 6.1.4)
-	| TYPE_NAME | struct_or_union_specifier | enum_specifier
+    | CL_MEM_FENCE_FLAGS (* omitted: reserved data types (OpenCL C 2.0, section 6.1.4) *)
+    | TYPE_NAME | struct_or_union_specifier | enum_specifier
 
 type_qualifier:
     CONST
-	| RESTRICT
-	| VOLATILE
+    | RESTRICT
+    | VOLATILE
 
 function_specifier:
     INLINE
 
-// Declarator
+(* Declarator *)
 
 declarator:
     pointer? direct_declarator
 
 direct_declarator:
     IDENTIFIER
-	| '(' declarator ')'
-	| direct_declarator '[' type_qualifier+ assignment_expression ']'
-	| direct_declarator '[' type_qualifier+ ']'
-	| direct_declarator '[' assignment_expression ']'
-	| direct_declarator '[' STATIC type_qualifier+ assignment_expression ']'
-	| direct_declarator '[' type_qualifier+ STATIC assignment_expression ']'
-	| direct_declarator '[' type_qualifier+ '*' ']'
-	| direct_declarator '[' '*' ']'
-	| direct_declarator '[' ']'
-	| direct_declarator '(' parameter_list ')'
-	| direct_declarator '(' identifier_list ')'
-	| direct_declarator '(' ')'
+    | '(' declarator ')'
+    | direct_declarator '[' ']'
+    | direct_declarator '(' parameter_list ')'
+    | direct_declarator '(' identifier_list? ')'
+    (*| direct_declarator '[' type_qualifier+ assignment_expression ']'
+    | direct_declarator '[' type_qualifier+ ']'
+    | direct_declarator '[' assignment_expression ']'
+    | direct_declarator '[' STATIC type_qualifier+ assignment_expression ']'
+    | direct_declarator '[' type_qualifier+ STATIC assignment_expression ']'
+    | direct_declarator '[' type_qualifier+ '*' ']'
+    | direct_declarator '[' '*' ']' *)
+    (* 6.9.d. Variable length arrays and structures with flexible (or unsized) arrays are not supported. *)
 
 pointer:
     '*'
-	| '*' type_qualifier+
-	| '*' pointer
-	| '*' type_qualifier+ pointer
+    | '*' type_qualifier+
+    | '*' pointer
+    | '*' type_qualifier+ pointer
 
 parameter_list:
     parameter_declaration (',' parameter_declaration)*
 
 parameter_declaration:
     declaration_specifier+ declarator
-	| declaration_specifier+ abstract_declarator
-	| declaration_specifier+
+    | declaration_specifier+
+    (* | declaration_specifier+ abstract_declarator *)
 
 identifier_list:
     IDENTIFIER (',' IDENTIFIER)*
 
-// Declaration
+(* Declaration *)
 
 declaration:
     declaration_specifier+ init_declarator_list? ';'
@@ -131,69 +131,71 @@ init_declarator_list:
     init_declarator (',' init_declarator)*
 
 init_declarator:
-    declarator // omitted: declarator '=' initializer
+    declarator
+    (* | declarator '=' initializer *)
 
-// Struct-or-union specifier (used in type_specifier)
+(* Struct-or-union specifier (used in type_specifier) *)
 
 struct_or_union_specifier:
-    struct_or_union IDENTIFIER '{' struct_declaration+ '}'
-	| struct_or_union '{' struct_declaration+ '}'
-	| struct_or_union IDENTIFIER
+    struct_or_union IDENTIFIER
+    (* | struct_or_union IDENTIFIER '{' struct_declaration+ '}'
+    | struct_or_union '{' struct_declaration+ '}' *)
 
 struct_or_union:
     STRUCT
-	| UNION
+    | UNION
 
-struct_declaration:
+(* Omit anonymous structures *)
+(* struct_declaration:
     specifier_qualifier+ struct_declarator_list ';'
 
 specifier_qualifier:
-	type_specifier
-	| type_qualifier
+    type_specifier
+    | type_qualifier
 
 struct_declarator_list:
     struct_declarator (',' struct_declarator)*
 
 struct_declarator:
     declarator
-	| declarator? ':' constant_expression
+    | declarator? ':' constant_expression *)
 
-// Enum specifier (used in type_specifier)
+(* Enum specifier (used in type_specifier) *)
 
-enum_specifier
-	: ENUM '{' enumerator_list '}'
-	| ENUM IDENTIFIER '{' enumerator_list '}'
-	| ENUM '{' enumerator_list ',' '}'
-	| ENUM IDENTIFIER '{' enumerator_list ',' '}'
-	| ENUM IDENTIFIER
+enum_specifier:
+    ENUM '{' enumerator_list '}'
+    | ENUM IDENTIFIER '{' enumerator_list '}'
+    | ENUM '{' enumerator_list ',' '}'
+    | ENUM IDENTIFIER '{' enumerator_list ',' '}'
+    | ENUM IDENTIFIER
 
-enumerator_list
-	: enumerator
-	| enumerator_list ',' enumerator
+enumerator_list:
+    enumerator (',' enumerator)*
 
-enumerator
-	: IDENTIFIER
-	| IDENTIFIER '=' constant_expression
+enumerator:
+    IDENTIFIER
+    (* | IDENTIFIER '=' constant_expression *)
 
-// Abstract declarator (used in parameter_declaration)
+(* Abstract declarator (used in parameter_declaration) *)
 
-abstract_declarator:
+(* abstract_declarator:
     pointer
-	| direct_abstract_declarator
-	| pointer direct_abstract_declarator
+    | direct_abstract_declarator
+    | pointer direct_abstract_declarator
 
 direct_abstract_declarator:
     '(' abstract_declarator ')'
-	| '[' ']'
-	| '[' assignment_expression ']'
-	| direct_abstract_declarator '[' ']'
-	| direct_abstract_declarator '[' assignment_expression ']'
-	| '[' '*' ']'
-	| direct_abstract_declarator '[' '*' ']'
-	| '(' ')'
-	| '(' parameter_list ')'
-	| direct_abstract_declarator '(' ')'
-	| direct_abstract_declarator '(' parameter_list ')'
+    | '[' ']'
+    | '[' assignment_expression ']'
+    | direct_abstract_declarator '[' ']'
+    | direct_abstract_declarator '[' assignment_expression ']'
+    | '[' '*' ']'
+    | direct_abstract_declarator '[' '*' ']'
+    | '(' ')'
+    | '(' parameter_list ')'
+    | direct_abstract_declarator '(' ')'
+    | direct_abstract_declarator '(' parameter_list ')' *)
 
-// TODO: assignment_expression (used in direct_declarator, direct_abstract_declarator)
-// TODO: constant_expression (used in struct_declarator, enumerator)
+(* Omitted:
+    assignment_expression (used in direct_declarator, direct_abstract_declarator)
+    constant_expression (used in struct_declarator, enumerator) *)
