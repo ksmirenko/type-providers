@@ -46,13 +46,27 @@ function_definition:
 
 declaration_specifier:
     function_qualifier
+    | address_space_qualifier
+    | access_qualifier
     | storage_class_specifier
     | type_specifier
     | type_qualifier
     | function_specifier
 
 function_qualifier:
-    KERNEL (* omitted:__attribute__ qualifiers *)
+    KERNEL
+    (* omitted: __attribute__ qualifiers *)
+
+address_space_qualifier:
+    GLOBAL
+    | LOCAL
+    | CONSTANT
+    | PRIVATE
+
+access_qualifier:
+    READ_ONLY
+    | WRITE_ONLY
+    | READ_WRITE
 
 storage_class_specifier:
     TYPEDEF
@@ -96,14 +110,6 @@ direct_declarator:
     | direct_declarator '[' ']'
     | direct_declarator '(' parameter_list ')'
     | direct_declarator '(' identifier_list? ')'
-    (*| direct_declarator '[' type_qualifier+ assignment_expression ']'
-    | direct_declarator '[' type_qualifier+ ']'
-    | direct_declarator '[' assignment_expression ']'
-    | direct_declarator '[' STATIC type_qualifier+ assignment_expression ']'
-    | direct_declarator '[' type_qualifier+ STATIC assignment_expression ']'
-    | direct_declarator '[' type_qualifier+ '*' ']'
-    | direct_declarator '[' '*' ']' *)
-    (* 6.9.d. Variable length arrays and structures with flexible (or unsized) arrays are not supported. *)
 
 pointer:
     '*'
@@ -112,15 +118,14 @@ pointer:
     | '*' type_qualifier+ pointer
 
 parameter_list:
-    parameter_declaration (',' parameter_declaration)*
+    not_empty_comma_list<parameter_declaration>
 
 parameter_declaration:
     declaration_specifier+ declarator
     | declaration_specifier+
-    (* | declaration_specifier+ abstract_declarator *)
 
 identifier_list:
-    IDENTIFIER (',' IDENTIFIER)*
+    not_empty_comma_list<IDENTIFIER>
 
 (* Declaration *)
 
@@ -128,74 +133,34 @@ declaration:
     declaration_specifier+ init_declarator_list? ';'
 
 init_declarator_list:
-    init_declarator (',' init_declarator)*
+    not_empty_comma_list<init_declarator>
 
 init_declarator:
     declarator
-    (* | declarator '=' initializer *)
 
 (* Struct-or-union specifier (used in type_specifier) *)
 
 struct_or_union_specifier:
     struct_or_union IDENTIFIER
-    (* | struct_or_union IDENTIFIER '{' struct_declaration+ '}'
-    | struct_or_union '{' struct_declaration+ '}' *)
 
 struct_or_union:
     STRUCT
     | UNION
 
-(* Omit anonymous structures *)
-(* struct_declaration:
-    specifier_qualifier+ struct_declarator_list ';'
-
-specifier_qualifier:
-    type_specifier
-    | type_qualifier
-
-struct_declarator_list:
-    struct_declarator (',' struct_declarator)*
-
-struct_declarator:
-    declarator
-    | declarator? ':' constant_expression *)
-
 (* Enum specifier (used in type_specifier) *)
 
 enum_specifier:
-    ENUM '{' enumerator_list '}'
-    | ENUM IDENTIFIER '{' enumerator_list '}'
-    | ENUM '{' enumerator_list ',' '}'
-    | ENUM IDENTIFIER '{' enumerator_list ',' '}'
-    | ENUM IDENTIFIER
+    ENUM IDENTIFIER
+    | ENUM IDENTIFIER? '{' enumerator_list ','? '}'
 
 enumerator_list:
-    enumerator (',' enumerator)*
+    not_empty_comma_list<enumerator>
 
 enumerator:
     IDENTIFIER
-    (* | IDENTIFIER '=' constant_expression *)
 
-(* Abstract declarator (used in parameter_declaration) *)
+(* Common *)
 
-(* abstract_declarator:
-    pointer
-    | direct_abstract_declarator
-    | pointer direct_abstract_declarator
-
-direct_abstract_declarator:
-    '(' abstract_declarator ')'
-    | '[' ']'
-    | '[' assignment_expression ']'
-    | direct_abstract_declarator '[' ']'
-    | direct_abstract_declarator '[' assignment_expression ']'
-    | '[' '*' ']'
-    | direct_abstract_declarator '[' '*' ']'
-    | '(' ')'
-    | '(' parameter_list ')'
-    | direct_abstract_declarator '(' ')'
-    | direct_abstract_declarator '(' parameter_list ')' *)
-
-(* Omitted:
-    assignment_expression (used in direct_declarator, direct_abstract_declarator)
-    constant_expression (used in struct_declarator, enumerator) *)
+not_empty_comma_list<item>: h=item t=(',' item)* {
+    h :: [for (_, it) in t -> it]
+}
