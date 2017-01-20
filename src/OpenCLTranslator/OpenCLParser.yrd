@@ -3,6 +3,13 @@ open Brahma.FSharp.OpenCL.AST
 }
 
 info {
+    Restrictions:
+        * only function definitions are supported as top-level declarations
+        * only basic data types are supported (see below in the grammar)
+        * unions are not supported
+        * anonymous structs as function parameters are not supported
+        * `inline` function specifier is not supported in OpenCL C
+
     C99 keywords:
         auto break case char const continue default do double else enum extern
         float for goto if inline int long register restrict return short signed
@@ -39,40 +46,30 @@ module Main
 program: (* FunDecl list *)
     function_definition+
 
-(* TODO *)
 function_definition: (* FunDecl *)
-    specifs=declaration_specifier_list decl=declarator ';' {
-        (* TODO for decl: match with ident(arg list) *)
-        FunDecl<_>(
-            isKernel:bool=, (* TODO: mebby change this in AST *)
-            name:string,
-            retType:Type<'lang>,
-            args:List<FunFormalArg<'lang>>,
-            body=StatementBlock<_>([])
-        )
-
+    declSpecs=declaration_specifier_list (cl, ident)=declarator '(' params=parameter_list? ')' ';' {
+        FunDecl<_>(declSpecs, ident, params, StatementBlock<_>([]))
     }
-    (* declaration_specifier+ declarator declaration* compound_statement *)
-    (* Declararion list between function header and body is not supported; body is filtered during lexing and omitted *)
 
 (* Declaration specifiers *)
 
-(* TODO *)
 declaration_specifier_list: (* DeclSpecifierPack *)
+    specs=declaration_specifier+ {
+        let declPack = new DeclSpecifierPack<_>()
+        List.fold (fun f -> f declPack) specs
+        declPack
+    }
 
-
-(* TODO *)
-declaration_specifier:
-    function_qualifier
-    | address_space_qualifier
-    | access_qualifier
-    | storage_class_specifier
-    | type_specifier
-    | type_qualifier
+declaration_specifier: (* DeclSpecifierPack -> void *)
+    x=function_qualifier { fun declPack -> declPack.FunQual = x }
+    | x=address_space_qualifier { fun declPack -> declPack.AddressSpaceQual = x }
+    | x=access_qualifier { fun declPack -> declPack.AccessQual = x }
+    | x=storage_class_specifier { fun declPack -> declPack.StorageClassSpec = x }
+    | x=type_specifier { fun declPack -> declPack.Type = x }
+    | x=type_qualifier { fun declPack -> declPack.AddTypeQual x }
 
 function_qualifier: (* FunQualifier *)
     KERNEL { Kernel }
-    (* omitted: __attribute__ qualifiers *)
 
 address_space_qualifier: (* AddressSpaceQualifier *)
     GLOBAL { Global }
@@ -108,10 +105,10 @@ type_specifier: (* Type *)
         match t with
         | t when t :? PrimitiveType<_> ->
             match (t :?> PrimitiveType<_>).Type with
-            | Char -> UChar
-            | Short -> UShort
-            | Int -> UInt
-            | Long -> ULong
+            | Char -> PrimitiveType<_>(UChar)
+            | Short -> PrimitiveType<_>(UShort)
+            | Int -> PrimitiveType<_>(UInt)
+            | Long -> PrimitiveType<_>(ULong)
             | _ -> failwithf "Fatal: could not parse 'unsigned %s'" t.ToString() |> ToLower
     }
     (* | SIZE_T | PTRDIFF_T | INTPTR_T | UINTPTR_T *)
@@ -136,8 +133,6 @@ type_qualifier: (* TypeQualifier *)
     | RESTRICT { Restrict }
     | VOLATILE { Volatile }
 
-(* `inline` function specifier is not supported in OpenCL C; see http://code.opencv.org/issues/3746 *)
-
 (* Declarator *)
 
 declarator: (* ((Type -> Type) option, string) *)
@@ -157,11 +152,6 @@ direct_declarator: (* ((Type -> Type) option, string) *)
         | None -> fun t -> ArrayType<_>(t), ident
         | Some cl -> fun t -> ArrayType<_>(cl t), ident
     }
-    | (cl, ident)=direct_declarator '(' parameter_list? ')' {
-
-    }
-    (* | '(' d=declarator ')'
-    | direct_declarator '(' identifier_list? ')' *)
 
 pointer: (* Type -> Type *)
     '*' qs=type_qualifier_list? cl=pointer? {
@@ -193,21 +183,6 @@ parameter_declaration: (* FunFormalArg *)
                 FunFormalArg<_>(declSpecs, ident)
             | None -> failwithf "Fatal: no type definition found for %s" ident
     }
-    (* | declaration_specifier+ *)
-
-(* identifier_list:
-    not_empty_comma_list<IDENTIFIER> *)
-
-(* Declaration *)
-
-(* declaration:
-    declaration_specifier+ init_declarator_list? ';'
-
-init_declarator_list:
-    not_empty_comma_list<init_declarator>
-
-init_declarator:
-    declarator *)
 
 (* Struct-or-union specifier (used in type_specifier) *)
 
@@ -217,18 +192,6 @@ struct_or_union_specifier: (* Struct *)
 struct_or_union: (* unit *)
     STRUCT
     (* | UNION *)
-
-(* Enum specifier (used in type_specifier) *)
-
-(* enum_specifier:
-    ENUM IDENTIFIER
-    | ENUM IDENTIFIER? '{' enumerator_list ','? '}'
-
-enumerator_list:
-    not_empty_comma_list<enumerator>
-
-enumerator:
-    IDENTIFIER *)
 
 (* Common *)
 

@@ -19,14 +19,41 @@ type DeclSpecifierPack<'lang> (?funQual:FunQualifier<'lang>,
                                ?addrSpaceQual:AddressSpaceQualifier<'lang>,
                                ?accessQual:AccessQualifier<'lang>,
                                ?storClassSpec:StorageClassSpecifier<'lang>,
-                               ?typeSpec:Type<'lang>) =
+                               ?typeSpec:Type<'lang>,
+                               ?typeQuals:TypeQualifier<'lang> list) =
     inherit Node<'lang>()
-    override this.Children = []
-    member this.FunQual = funQual
-    member this.AddressSpaceQual =
+
+    let mutable _funQual = funQual
+    let mutable _addrSpaceQual =
         match addrSpaceQual with
         | Some x -> x
         | None -> Default
-    member this.AccessQual = accessQual
-    member this.StorageClassSpec = storClassSpec
-    member this.Type = typeSpec
+    let mutable _accessQual = accessQual
+    let mutable _storClassSpec = storClassSpec
+    let mutable _typeSpec = typeSpec
+    let mutable _typeQuals =
+        match typeQuals with
+        | Some x -> x
+        | None -> []
+
+    override this.Children = []
+    member this.FunQual
+        with get() = _funQual
+        and set v = _funQual <- v
+    member this.AddressSpaceQual
+        with get() = _addrSpaceQual
+        and set v = _addrSpaceQual <- v
+    member this.AccessQual
+        with get() = _accessQual
+        and set v = _accessQual <- v
+    member this.StorageClassSpec
+        with get() = _storClassSpec
+        and set v = _storClassSpec <- v
+    member this.Type
+        with get() = _typeSpec
+        and set v = _typeSpec <- v
+    member this.TypeQuals
+        with get() = _typeQuals
+        and set v = _typeQuals <- v
+    member this.AddTypeQual tq =
+        _typeQuals <- tq :: _typeQuals
