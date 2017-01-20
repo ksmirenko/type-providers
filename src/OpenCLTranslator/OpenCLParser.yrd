@@ -8,6 +8,7 @@ info {
         * only basic data types are supported (see below in the grammar)
         * unions are not supported
         * anonymous structs as function parameters are not supported
+        * __attribute__ specifiers for kernel functions are not supported
         * `inline` function specifier is not supported in OpenCL C
 
     C99 keywords:
@@ -48,6 +49,7 @@ program: (* FunDecl list *)
 
 function_definition: (* FunDecl *)
     declSpecs=declaration_specifier_list (cl, ident)=declarator '(' params=parameter_list? ')' ';' {
+        (* TODO: validate declSpecs *)
         FunDecl<_>(declSpecs, ident, params, StatementBlock<_>([]))
     }
 
