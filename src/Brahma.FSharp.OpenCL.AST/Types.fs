@@ -15,7 +15,9 @@
 
 namespace Brahma.FSharp.OpenCL.AST
 
+// TODO: update Brahma.FSharp to support the new types
 type PTypes<'lang> =
+    | Bool
     | Char
     | UChar
     | Short
@@ -27,25 +29,25 @@ type PTypes<'lang> =
     | Float
     | Double
     | Void
+    | TypeName of string // TODO: review
 
 [<AbstractClass>]
 type Type<'lang>()=
     inherit Node<'lang>()
     abstract Size:int
-    //abstract SpaceModifier:SpaceModifier
+    abstract DeclSpecifiers:DeclSpecifierPack<'lang> option
+    default this.DeclSpecifiers = None
 
 type PrimitiveType<'lang>(pType:PTypes<'lang>) =
     inherit Type<'lang>()
     override this.Size = 32
     override this.Children = []
-    //override this.SpaceModifier = Private
     member this.Type = pType
 
 type ArrayType<'lang>(baseType:Type<'lang>, size:int) =
     inherit Type<'lang>()
     override this.Size = size
     override this.Children = []
-    //override this.SpaceModifier = match spaceModeifier with Some x -> x | None -> Private
     member this.BaseType = baseType
 
 [<Struct>]
@@ -73,9 +75,9 @@ type StructType<'lang>(decl)=
 
         
 
-type RefType<'lang>(baseType:Type<'lang>) =
+type RefType<'lang>(baseType:Type<'lang>, ?declSpecifiers:DeclSpecifierPack<'lang>) =
     inherit Type<'lang>()
     override this.Size = baseType.Size
     override this.Children = []
-    //override this.SpaceModifier = match spaceModeifier with Some x -> x | None -> Global
+    override this.DeclSpecifiers = declSpecifiers
     member this.BaseType = baseType

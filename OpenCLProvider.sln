@@ -7,6 +7,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "OpenCLProvider", "src\OpenC
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "OpenCLTranslator", "src\OpenCLTranslator\OpenCLTranslator.fsproj", "{B5E97208-DEDC-475E-93CE-FFC6CAA8CAD0}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Brahma.FSharp.OpenCL.AST", "src\Brahma.FSharp.OpenCL.AST\Brahma.FSharp.OpenCL.AST.fsproj", "{E0388E66-E36C-4ECA-ADCC-BFD115820C25}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{B5E97208-DEDC-475E-93CE-FFC6CAA8CAD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5E97208-DEDC-475E-93CE-FFC6CAA8CAD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5E97208-DEDC-475E-93CE-FFC6CAA8CAD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0388E66-E36C-4ECA-ADCC-BFD115820C25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0388E66-E36C-4ECA-ADCC-BFD115820C25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0388E66-E36C-4ECA-ADCC-BFD115820C25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0388E66-E36C-4ECA-ADCC-BFD115820C25}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

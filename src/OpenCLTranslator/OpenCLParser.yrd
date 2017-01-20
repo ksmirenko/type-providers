@@ -39,117 +39,155 @@ module Main
 program:
     function_definition+
 
-function_definition:
-    declaration_specifier+ declarator declaration* ';' (* semicolon instead of compound_statement *)
+function_definition: (* TODO *)
+    specifs=declaration_specifier+ decl=declarator ';' {
+        (* TODO for decl: match with ident(arg list) *)
+        FunDecl<_>(
+            isKernel:bool=, (* TODO: mebby change this in AST *)
+            name:string,
+            retType:Type<'lang>,
+            args:List<FunFormalArg<'lang>>,
+            body=StatementBlock<_>([])
+        )
+
+    }
+    (* declaration_specifier+ declarator declaration* compound_statement *)
+    (* Declararion list between function header and body is not supported; body is filtered during lexing and omitted *)
 
 (* Declaration specifiers *)
 
-declaration_specifier:
+declaration_specifier: (* TODO: manage different types properly *)
     function_qualifier
     | address_space_qualifier
     | access_qualifier
     | storage_class_specifier
     | type_specifier
     | type_qualifier
-    | function_specifier
 
 function_qualifier:
-    KERNEL
+    KERNEL { Kernel }
     (* omitted: __attribute__ qualifiers *)
 
 address_space_qualifier:
-    GLOBAL
-    | LOCAL
-    | CONSTANT
-    | PRIVATE
+    GLOBAL { Global }
+    | LOCAL { Local }
+    | CONSTANT { Constant }
+    | PRIVATE { Private }
 
 access_qualifier:
-    READ_ONLY
-    | WRITE_ONLY
-    | READ_WRITE
+    READ_ONLY { ReadOnly }
+    | WRITE_ONLY { WriteOnly }
+    | READ_WRITE { ReadWrite }
 
 storage_class_specifier:
-    TYPEDEF
-    | EXTERN (* only for functions and global variables declared in program scope or variables declared inside a function *)
-    | STATIC (* only for non-kernel functions, global variables declared in program scope and variables inside a function declared in the global or constant address space *)
+    TYPEDEF { failwith "Fatal: typedef not supported yet!" }
+    | EXTERN { Extern } (* only for functions and global variables declared in program scope or variables declared inside a function *)
+    | STATIC { Static } (* only for non-kernel functions, global variables declared in program scope and variables inside a function declared in the global or constant address space *)
 
 type_specifier:
-    BOOL | CHAR | SHORT | INT | LONG
-    | UCHAR | USHORT | UINT | ULONG
-    | SIGNED | UNSIGNED
-    | SIZE_T | PTRDIFF_T | INTPTR_T | UINTPTR_T
-    | VOID
-    | CHAR2 | UCHAR2 | SHORT2 | USHORT2 | INT2 | UINT2 | LONG2 | ULONG2 | FLOAT2 | DOUBLE2
+    BOOL { PrimitiveType<_>(Bool) }
+    | CHAR { PrimitiveType<_>(Char) } | SHORT { PrimitiveType<_>(Short) }
+    | INT { PrimitiveType<_>(Int) } | LONG { PrimitiveType<_>(Long) }
+    | UCHAR { PrimitiveType<_>(UChar) } | USHORT { PrimitiveType<_>(UShort) }
+    | UINT { PrimitiveType<_>(UInt) } | ULONG { PrimitiveType<_>(ULong) }
+    | FLOAT { PrimitiveType<_>(Float) } | DOUBLE { PrimitiveType<_>(Double) } | HALF { PrimitiveType<_>(Half) }
+    | SIGNED t=type_specifier {
+        match t with
+        | t when t :? PrimitiveType<_> ->
+            match (t :?> PrimitiveType<_>).Type with
+            | Char | Short | Int | Long -> t
+            | _ -> failwithf "Fatal: could not parse 'signed %s'" t.ToString() |> ToLower
+    }
+    | UNSIGNED t=type_specifier {
+        match t with
+        | t when t :? PrimitiveType<_> ->
+            match (t :?> PrimitiveType<_>).Type with
+            | Char -> UChar
+            | Short -> UShort
+            | Int -> UInt
+            | Long -> ULong
+            | _ -> failwithf "Fatal: could not parse 'unsigned %s'" t.ToString() |> ToLower
+    }
+    (* | SIZE_T | PTRDIFF_T | INTPTR_T | UINTPTR_T *)
+    | VOID { PrimitiveType<_>(Void) }
+    (* | CHAR2 | UCHAR2 | SHORT2 | USHORT2 | INT2 | UINT2 | LONG2 | ULONG2 | FLOAT2 | DOUBLE2
     | CHAR3 | UCHAR3 | SHORT3 | USHORT3 | INT3 | UINT3 | LONG3 | ULONG3 | FLOAT3 | DOUBLE3
     | CHAR4 | UCHAR4 | SHORT4 | USHORT4 | INT4 | UINT4 | LONG4 | ULONG4 | FLOAT4 | DOUBLE4
     | CHAR8 | UCHAR8 | SHORT8 | USHORT8 | INT8 | UINT8 | LONG8 | ULONG8 | FLOAT8 | DOUBLE8
-    | CHAR16 | UCHAR16 | SHORT16 | USHORT16 | INT16 | UINT16 | LONG16 | ULONG16 | FLOAT16 | DOUBLE16
-    | IMAGE2D_T | IMAGE3D_T | IMAGE2D_ARRAY_T | IMAGE1D_T
-    | IMAGE1D_BUFFER_T | IMAGE1D_ARRAY_T | IMAGE2D_DEPTH_T | IMAGE2D_ARRAY_DEPTH_T
-    | SAMPLER_T | QUEUE_T | NDRANGE_T
+    | CHAR16 | UCHAR16 | SHORT16 | USHORT16 | INT16 | UINT16 | LONG16 | ULONG16 | FLOAT16 | DOUBLE16 *)
+    (* | IMAGE2D_T | IMAGE3D_T | IMAGE2D_ARRAY_T | IMAGE1D_T
+    | IMAGE1D_BUFFER_T | IMAGE1D_ARRAY_T | IMAGE2D_DEPTH_T | IMAGE2D_ARRAY_DEPTH_T *)
+    (* | SAMPLER_T | QUEUE_T | NDRANGE_T
     | CLK_EVENT_T | RESERVE_ID_T | EVENT_T
-    | CL_MEM_FENCE_FLAGS (* omitted: reserved data types (OpenCL C 2.0, section 6.1.4) *)
-    | TYPE_NAME | struct_or_union_specifier | enum_specifier
+    | CL_MEM_FENCE_FLAGS *)
+    | t=TYPE_NAME { PrimitiveType<_>(TypeName t) }
+    | s=struct_or_union_specifier { StructType<_>(Some s) }
+    (* | enum_specifier *)
+    (* omitted: reserved data types (OpenCL C 2.0, section 6.1.4) *)
 
 type_qualifier:
-    CONST
-    | RESTRICT
-    | VOLATILE
+    CONST { Const }
+    | RESTRICT { Restrict }
+    | VOLATILE { Volatile }
 
-function_specifier:
-    INLINE
+(* `inline` function specifier is not supported in OpenCL C; see http://code.opencv.org/issues/3746 *)
 
 (* Declarator *)
 
 declarator:
-    pointer? direct_declarator
+    p=pointer? d=direct_declarator {
+        p, d
+    }
 
-direct_declarator:
-    IDENTIFIER
-    | '(' declarator ')'
-    | direct_declarator '[' ']'
-    | direct_declarator '(' parameter_list ')'
-    | direct_declarator '(' identifier_list? ')'
+direct_declarator: (* TODO *)
+    ident=IDENTIFIER { ident }
+    | direct_declarator '[' ']' (* TODO: decide how to store arrays; probably list, where tailmost is declarator *)
+    | direct_declarator '(' parameter_list? ')' (* TODO: probably (declarator, param_list) *)
+    (* | '(' d=declarator ')'
+    | direct_declarator '(' identifier_list? ')' *)
 
-pointer:
-    '*'
-    | '*' type_qualifier+
-    | '*' pointer
-    | '*' type_qualifier+ pointer
+pointer: (* NB: careful here *)
+    '*' qs=type_qualifier* { [qs] }
+    | '*' qs=type_qualifier* tl=pointer { qs :: tl }
 
 parameter_list:
     not_empty_comma_list<parameter_declaration>
 
-parameter_declaration:
-    declaration_specifier+ declarator
-    | declaration_specifier+
+parameter_declaration: (* TODO *)
+    specifs=declaration_specifier+ (p, d)=declarator {
+        // assume d is a Type
+        match p with
+        | None -> buildType specifs d
+        | Some ps -> List.fold (fun t qs -> RefType<_>(t, makeDeclSpecPack qs)) d ps |> buildType specifs
+    }
+    (* | declaration_specifier+ *)
 
-identifier_list:
-    not_empty_comma_list<IDENTIFIER>
+(* identifier_list:
+    not_empty_comma_list<IDENTIFIER> *)
 
 (* Declaration *)
 
-declaration:
+(* declaration:
     declaration_specifier+ init_declarator_list? ';'
 
 init_declarator_list:
     not_empty_comma_list<init_declarator>
 
 init_declarator:
-    declarator
+    declarator *)
 
 (* Struct-or-union specifier (used in type_specifier) *)
 
 struct_or_union_specifier:
-    struct_or_union IDENTIFIER
+    struct_or_union n=IDENTIFIER { Struct<_>(n, []) }
 
 struct_or_union:
     STRUCT
-    | UNION
+    (* | UNION *)
 
 (* Enum specifier (used in type_specifier) *)
 
-enum_specifier:
+(* enum_specifier:
     ENUM IDENTIFIER
     | ENUM IDENTIFIER? '{' enumerator_list ','? '}'
 
@@ -157,7 +195,7 @@ enumerator_list:
     not_empty_comma_list<enumerator>
 
 enumerator:
-    IDENTIFIER
+    IDENTIFIER *)
 
 (* Common *)
 
