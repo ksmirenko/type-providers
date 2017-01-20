@@ -15,26 +15,18 @@
 
 namespace Brahma.FSharp.OpenCL.AST
 
-type FunQualifier<'lang> =
-    | Kernel
-
-type AddressSpaceQualifier<'lang> =
-    | Global
-    | Local
-    | Constant
-    | Private
-    | Default
-
-type AccessQualifier<'lang> =
-    | ReadOnly
-    | WriteOnly
-    | ReadWrite
-
-type StorageClassSpecifier<'lang> =
-    | Extern
-    | Static
-
-type TypeQualifier<'lang> =
-    | Const
-    | Restrict
-    | Volatile
+type DeclSpecifierPack<'lang> (?funQual:FunQualifier<'lang>,
+                               ?addrSpaceQual:AddressSpaceQualifier<'lang>,
+                               ?accessQual:AccessQualifier<'lang>,
+                               ?storClassSpec:StorageClassSpecifier<'lang>,
+                               ?typeSpec:Type<'lang>) =
+    inherit Node<'lang>()
+    override this.Children = []
+    member this.FunQual = funQual
+    member this.AddressSpaceQual =
+        match addrSpaceQual with
+        | Some x -> x
+        | None -> Default
+    member this.AccessQual = accessQual
+    member this.StorageClassSpec = storClassSpec
+    member this.Type = typeSpec

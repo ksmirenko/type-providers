@@ -36,11 +36,12 @@ options {
 module Main
 
 [<Start>]
-program:
+program: (* FunDecl list *)
     function_definition+
 
-function_definition: (* TODO *)
-    specifs=declaration_specifier+ decl=declarator ';' {
+(* TODO *)
+function_definition: (* FunDecl *)
+    specifs=declaration_specifier_list decl=declarator ';' {
         (* TODO for decl: match with ident(arg list) *)
         FunDecl<_>(
             isKernel:bool=, (* TODO: mebby change this in AST *)
@@ -56,7 +57,12 @@ function_definition: (* TODO *)
 
 (* Declaration specifiers *)
 
-declaration_specifier: (* TODO: manage different types properly *)
+(* TODO *)
+declaration_specifier_list: (* DeclSpecifierPack *)
+
+
+(* TODO *)
+declaration_specifier:
     function_qualifier
     | address_space_qualifier
     | access_qualifier
@@ -64,27 +70,27 @@ declaration_specifier: (* TODO: manage different types properly *)
     | type_specifier
     | type_qualifier
 
-function_qualifier:
+function_qualifier: (* FunQualifier *)
     KERNEL { Kernel }
     (* omitted: __attribute__ qualifiers *)
 
-address_space_qualifier:
+address_space_qualifier: (* AddressSpaceQualifier *)
     GLOBAL { Global }
     | LOCAL { Local }
     | CONSTANT { Constant }
     | PRIVATE { Private }
 
-access_qualifier:
+access_qualifier: (* AccessQualifier *)
     READ_ONLY { ReadOnly }
     | WRITE_ONLY { WriteOnly }
     | READ_WRITE { ReadWrite }
 
-storage_class_specifier:
+storage_class_specifier: (* StorageClassSpecifier *)
     TYPEDEF { failwith "Fatal: typedef not supported yet!" }
     | EXTERN { Extern } (* only for functions and global variables declared in program scope or variables declared inside a function *)
     | STATIC { Static } (* only for non-kernel functions, global variables declared in program scope and variables inside a function declared in the global or constant address space *)
 
-type_specifier:
+type_specifier: (* Type *)
     BOOL { PrimitiveType<_>(Bool) }
     | CHAR { PrimitiveType<_>(Char) } | SHORT { PrimitiveType<_>(Short) }
     | INT { PrimitiveType<_>(Int) } | LONG { PrimitiveType<_>(Long) }
@@ -125,7 +131,7 @@ type_specifier:
     (* | enum_specifier *)
     (* omitted: reserved data types (OpenCL C 2.0, section 6.1.4) *)
 
-type_qualifier:
+type_qualifier: (* TypeQualifier *)
     CONST { Const }
     | RESTRICT { Restrict }
     | VOLATILE { Volatile }
@@ -134,31 +140,58 @@ type_qualifier:
 
 (* Declarator *)
 
-declarator:
-    p=pointer? d=direct_declarator {
-        p, d
+declarator: (* ((Type -> Type) option, string) *)
+    pcl=pointer? (dcl, ident)=direct_declarator {
+        match pcl, dcl with
+        | None,     None     -> None, ident
+        | Some pcl, None     -> pcl, ident
+        | None,     Some dcl -> dcl, ident
+        | Some pcl, Some dcl -> pcl <| dcl, ident
     }
+(* NB: test the examples from C99, 6.7.5.1.3 at page 115 *)
 
-direct_declarator: (* TODO *)
-    ident=IDENTIFIER { ident }
-    | direct_declarator '[' ']' (* TODO: decide how to store arrays; probably list, where tailmost is declarator *)
-    | direct_declarator '(' parameter_list? ')' (* TODO: probably (declarator, param_list) *)
+direct_declarator: (* ((Type -> Type) option, string) *)
+    ident=IDENTIFIER { None, ident }
+    | (cl, ident)=direct_declarator '[' ']' {
+        match cl with
+        | None -> fun t -> ArrayType<_>(t), ident
+        | Some cl -> fun t -> ArrayType<_>(cl t), ident
+    }
+    | (cl, ident)=direct_declarator '(' parameter_list? ')' {
+
+    }
     (* | '(' d=declarator ')'
     | direct_declarator '(' identifier_list? ')' *)
 
-pointer: (* NB: careful here *)
-    '*' qs=type_qualifier* { [qs] }
-    | '*' qs=type_qualifier* tl=pointer { qs :: tl }
+pointer: (* Type -> Type *)
+    '*' qs=type_qualifier_list? cl=pointer? {
+        match cl with
+        | None -> fun t -> RefType<_>(t, qs)
+        | Some cl -> fun t -> RefType<_>(cl t, qs)
+    }
 
-parameter_list:
+type_qualifier_list: (* TypeQualifier list *)
+    type_qualifier+
+
+parameter_list: (* FunFormalArg list *)
     not_empty_comma_list<parameter_declaration>
 
-parameter_declaration: (* TODO *)
-    specifs=declaration_specifier+ (p, d)=declarator {
-        // assume d is a Type
-        match p with
-        | None -> buildType specifs d
-        | Some ps -> List.fold (fun t qs -> RefType<_>(t, makeDeclSpecPack qs)) d ps |> buildType specifs
+parameter_declaration: (* FunFormalArg *)
+    declSpecs=declaration_specifier_list (cl, ident)=declarator {
+        match cl with
+        | None -> FunFormalArg<_>(declSpecs, ident)
+        | Some cl ->
+            match declSpecs.Type with
+            | Some oldType ->
+                let newType = cl oldType
+                let newDeclSpecs = new DeclSpecifierPack<_>(declSpecs.FunQual,
+                                                            declSpecs.AddressSpaceQual,
+                                                            declSpecs.AccessQual,
+                                                            declSpecs.StorageClassSpec,
+                                                            newType,
+                                                            declSpecs.TypeQual)
+                FunFormalArg<_>(declSpecs, ident)
+            | None -> failwithf "Fatal: no type definition found for %s" ident
     }
     (* | declaration_specifier+ *)
 
@@ -178,10 +211,10 @@ init_declarator:
 
 (* Struct-or-union specifier (used in type_specifier) *)
 
-struct_or_union_specifier:
+struct_or_union_specifier: (* Struct *)
     struct_or_union n=IDENTIFIER { Struct<_>(n, []) }
 
-struct_or_union:
+struct_or_union: (* unit *)
     STRUCT
     (* | UNION *)
 
@@ -199,6 +232,5 @@ enumerator:
 
 (* Common *)
 
-not_empty_comma_list<item>: h=item t=(',' item)* {
-    h :: [for (_, it) in t -> it]
-}
+not_empty_comma_list<item>: (* item list *)
+    h=item t=(',' item)* { h :: [for (_, it) in t -> it] }

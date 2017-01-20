@@ -1,15 +1,15 @@
 ﻿// Copyright (c) 2012, 2013 Semyon Grigorev <rsdpisuy@gmail.com>
 // All rights reserved.
-// 
+//
 // The contents of this file are made available under the terms of the
 // Eclipse Public License v1.0 (the "License") which accompanies this
 // distribution, and is available at the following URL:
 // http://www.opensource.org/licenses/eclipse-1.0.php
-// 
+//
 // Software distributed under the License is distributed on an "AS IS" basis,
 // WITHOUT WARRANTY OF ANY KIND, either expressed or implied. See the License for
 // the specific language governing rights and limitations under the License.
-// 
+//
 // By using this software in any fashion, you are agreeing to be bound by the
 // terms of the License.
 
@@ -35,8 +35,6 @@ type PTypes<'lang> =
 type Type<'lang>()=
     inherit Node<'lang>()
     abstract Size:int
-    abstract DeclSpecifiers:DeclSpecifierPack<'lang> option
-    default this.DeclSpecifiers = None
 
 type PrimitiveType<'lang>(pType:PTypes<'lang>) =
     inherit Type<'lang>()
@@ -44,9 +42,13 @@ type PrimitiveType<'lang>(pType:PTypes<'lang>) =
     override this.Children = []
     member this.Type = pType
 
-type ArrayType<'lang>(baseType:Type<'lang>, size:int) =
+// TODO: review; size has been made optional with default value zero
+type ArrayType<'lang>(baseType:Type<'lang>, ?size:int) =
     inherit Type<'lang>()
-    override this.Size = size
+    override this.Size =
+        match size with
+        | Some size -> size
+        | None -> 0
     override this.Children = []
     member this.BaseType = baseType
 
@@ -63,21 +65,21 @@ type Struct<'lang>(name: string, fields: List<StructField<'lang>>) =
     member this.Fields = fields
     member this.Name = name
 
-type StructType<'lang>(decl)=    
+type StructType<'lang>(decl)=
     inherit Type<'lang>()
     member val Declaration : Option<Struct<'lang>> = decl with get, set
     override this.Children = []
-    override this.Size = 
+    override this.Size =
         match  this.Declaration with
         | Some decl -> decl.Fields |> List.sumBy (fun f -> f.FType.Size)
         | None -> 0
-   
 
-        
-
-type RefType<'lang>(baseType:Type<'lang>, ?declSpecifiers:DeclSpecifierPack<'lang>) =
+type RefType<'lang>(baseType:Type<'lang>, ?typeQuals:TypeQualifier<'lang> list) =
     inherit Type<'lang>()
     override this.Size = baseType.Size
     override this.Children = []
-    override this.DeclSpecifiers = declSpecifiers
     member this.BaseType = baseType
+    member this.TypeQuals =
+        match typeQuals with
+        | Some typeQuals -> typeQuals
+        | None -> []
