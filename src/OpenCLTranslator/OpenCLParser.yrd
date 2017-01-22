@@ -2,34 +2,6 @@
 open Brahma.FSharp.OpenCL.AST
 }
 
-info {
-    Restrictions:
-        * only function definitions are supported as top-level declarations
-        * only basic data types are supported (see below in the grammar)
-        * unions are not supported
-        * anonymous structs as function parameters are not supported
-        * __attribute__ specifiers for kernel functions are not supported
-        * `inline` function specifier is not supported in OpenCL C
-
-    C99 keywords:
-        auto break case char const continue default do double else enum extern
-        float for goto if inline int long register restrict return short signed
-        sizeof static struct switch typedef union unsigned void volatile while
-        _Bool _Complex _Imaginary
-    OpenCL C 2.0 keywords:
-        Data types: (see below)
-        Address space qualifiers:
-            __global global __local local
-            __constant constant __private private
-            __generic generic (* reserved *)
-        Function qualifiers:
-            __kernel kernel
-        Access qualifiers:
-            __read_only read_only __write_only write_only __read_write read_write
-        Additional:
-            uniform pipe
-}
-
 tokens {
     _ of string
 }
@@ -48,8 +20,9 @@ program: (* FunDecl list *)
     function_definition+
 
 function_definition: (* FunDecl *)
-    declSpecs=declaration_specifier_list (cl, ident)=declarator '(' params=parameter_list? ')' ';' {
+    declSpecs=declaration_specifier_list clAndIdent=declarator '(' params=parameter_list? ')' ';' {
         (* TODO: validate declSpecs *)
+        let (cl, ident) = clAndIdent
         FunDecl<_>(declSpecs, ident, params, StatementBlock<_>([]))
     }
 
@@ -138,7 +111,8 @@ type_qualifier: (* TypeQualifier *)
 (* Declarator *)
 
 declarator: (* ((Type -> Type) option, string) *)
-    pcl=pointer? (dcl, ident)=direct_declarator {
+    pcl=pointer? dclAndIdent=direct_declarator {
+        let (dcl, ident) = dclAndIdent
         match pcl, dcl with
         | None,     None     -> None, ident
         | Some pcl, None     -> pcl, ident
@@ -149,7 +123,8 @@ declarator: (* ((Type -> Type) option, string) *)
 
 direct_declarator: (* ((Type -> Type) option, string) *)
     ident=IDENTIFIER { None, ident }
-    | (cl, ident)=direct_declarator '[' ']' {
+    | clAndIdent=direct_declarator '[' ']' {
+        let (cl, ident) = clAndIdent
         match cl with
         | None -> fun t -> ArrayType<_>(t), ident
         | Some cl -> fun t -> ArrayType<_>(cl t), ident
@@ -169,7 +144,8 @@ parameter_list: (* FunFormalArg list *)
     not_empty_comma_list<parameter_declaration>
 
 parameter_declaration: (* FunFormalArg *)
-    declSpecs=declaration_specifier_list (cl, ident)=declarator {
+    declSpecs=declaration_specifier_list clAndIdent=declarator {
+        let (cl, ident) = clAndIdent
         match cl with
         | None -> FunFormalArg<_>(declSpecs, ident)
         | Some cl ->

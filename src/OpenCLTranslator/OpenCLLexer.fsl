@@ -1,5 +1,5 @@
 {
-module BoolCalc.Lexer
+module OpenCLTranslator.Lexer
 open Microsoft.FSharp.Text.Lexing
 open OpenCLTranslator.Parser
 
@@ -54,3 +54,6 @@ rule token = parse
 | "struct" { STRUCT(lexeme lexbuf) }
 
 | chars (chars | digit)+ { IDENTIFIER(lexeme lexbuf) }
+
+| eof { RNGLR_EOF ("")}
+| _ {  failwithf "unexpected input: %s" <| string lexeme }

@@ -1,7 +1,44 @@
 FRAMEWORK: >= NET462
 NUGET
-  remote: http://api.nuget.org/v3/index.json
-    FSharp.Core (4.0.0.1) - redirects: force
+  remote: https://api.nuget.org/v3/index.json
+    Argu (3.2)
+    Brahma.FSharp (1.0.1)
+      FSharp.Core
+      FSharp.Quotations.Evaluator
+      FSharpx.Collections
+      OpenCL.Net (2.2.9)
+      YC.PrettyPrinter
+    DotNet.Contracts (1.10.10126.4)
+    DotParser (1.0.6)
+      FSharp.Core
+      FSharpx.Collections.Experimental
+    FSharp.Core (4.0.0.1)
+    FSharp.Quotations.Evaluator (1.0.7)
     FSharp.TypeProviders.StarterPack (1.1.3.88)
+    FSharpx.Collections (1.15.1)
+      FSharp.Core
+    FSharpx.Collections.Experimental (1.15.1)
+      FSharp.Core
+      FSharpx.Collections (>= 1.15.1)
+    Mono.Addins (1.2)
     Newtonsoft.Json (9.0.1)
+    NuGet.CommandLine (3.5)
+    NUnit (2.6.4)
     OpenCL.Net (2.2.9)
+    YC.PrettyPrinter (0.0.5)
+      FSharp.Core
+    YC.QuickGraph (3.7.3)
+      DotNet.Contracts
+      DotParser (>= 1.0.6)
+      FSharp.Core
+    YC.SDK (0.1.0-beta2)
+    YC.SDK.Runtime (0.1.0-beta2)
+      Argu (>= 3.2)
+      FSharp.Core (>= 4.0)
+      FSharpx.Collections.Experimental (>= 1.15.1)
+      Mono.Addins (>= 1.2)
+      YC.PrettyPrinter (>= 0.0.5)
+      YC.QuickGraph (>= 3.7.3)
+      YC.Utils.SourceText (>= 0.3.0.1)
+    YC.Utils.SourceText (0.3.0.1)
+      FSharp.Core (4.0.0.1)
