@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b5e97208-dedc-475e-93ce-ffc6caa8cad0</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>OpenCLTranslator</RootNamespace>
     <AssemblyName>OpenCLTranslator</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>

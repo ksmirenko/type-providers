@@ -8,13 +8,18 @@ let lexeme lexbuf = LexBuffer<_>.LexemeString(lexbuf)
 
 let digit = ['0'-'9']
 let whitespace = [' ' '\t' '\r' '\n']
-let chars = ['a'-'z'] ['A'-'Z']
+let chars = ['a'-'z'] | ['A'-'Z']
 let specialChars = [',' ';' '*' '{' '}' '(' ')' '[' ']']
 
 rule token = parse
 | whitespace { token lexbuf }
 
-| specialChars { lexeme lexbuf }
+| specialChars {
+    let ch = lexeme lexbuf
+    match genLiteral ch ch with
+    | Some t -> t
+    | None -> failwith "failed to gen a literal"
+}
 
 | "__kernel" | "kernel" { KERNEL(lexeme lexbuf) }
 
@@ -56,4 +61,4 @@ rule token = parse
 | chars (chars | digit)+ { IDENTIFIER(lexeme lexbuf) }
 
 | eof { RNGLR_EOF ("")}
-| _ {  failwithf "unexpected input: %s" <| string lexeme }
+| _ {  failwithf "unexpected input: %s" <| lexeme lexbuf}

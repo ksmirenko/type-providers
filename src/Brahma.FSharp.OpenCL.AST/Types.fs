@@ -29,6 +29,7 @@ type PTypes<'lang> =
     | Float
     | Double
     | Void
+    | Half
     | TypeName of string // TODO: review
 
 [<AbstractClass>]
@@ -74,12 +75,9 @@ type StructType<'lang>(decl)=
         | Some decl -> decl.Fields |> List.sumBy (fun f -> f.FType.Size)
         | None -> 0
 
-type RefType<'lang>(baseType:Type<'lang>, ?typeQuals:TypeQualifier<'lang> list) =
+type RefType<'lang>(baseType:Type<'lang>, typeQuals:TypeQualifier<'lang> list) =
     inherit Type<'lang>()
     override this.Size = baseType.Size
     override this.Children = []
     member this.BaseType = baseType
-    member this.TypeQuals =
-        match typeQuals with
-        | Some typeQuals -> typeQuals
-        | None -> []
+    member this.TypeQuals = typeQuals

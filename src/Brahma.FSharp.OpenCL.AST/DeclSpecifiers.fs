@@ -34,6 +34,7 @@ type StorageClassSpecifier<'lang> =
     | Extern
     | Static
 
+[<RequireQualifiedAccess>]
 type TypeQualifier<'lang> =
     | Const
     | Restrict

@@ -4,7 +4,7 @@ open OpenCLTranslator.Lexer
 open Yard.Generators.Common.AST
 open Yard.Generators.RNGLR.Parser
 open Brahma.FSharp.OpenCL.AST
-open System.Collections.Generic
+//open System.Collections.Generic
 
 let execute (code) =
     let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<_>.FromString code
@@ -23,11 +23,11 @@ let execute (code) =
 
     let tree =
         match OpenCLTranslator.Parser.buildAst allTokens with
-        | Success (sppf, t, d) -> OpenCLTranslator.Parser.translate translateArgs sppf d
+        | Success (sppf, t, d) -> (OpenCLTranslator.Parser.translate translateArgs sppf d) :> List<List<FunDecl<Parser.Lang>>>
         | Error (pos,errs,msg,dbg,_) -> failwithf "Error: %A    %A \n %A"  pos errs msg
 
     tree.[0]
 
 
-let tree = execute("__kernel void foo(__global const float *bar, uint baz);")
+let tree = execute("__kernel void foo(__global const int *bar, uint baz);")
 printfn "%A" tree

@@ -1,5 +1,7 @@
 {
 open Brahma.FSharp.OpenCL.AST
+
+type Lang = | OpenCL
 }
 
 tokens {
@@ -20,10 +22,10 @@ program: (* FunDecl list *)
     function_definition+
 
 function_definition: (* FunDecl *)
-    declSpecs=declaration_specifier_list clAndIdent=declarator '(' params=parameter_list? ')' ';' {
+    declSpecs=declaration_specifier_list clAndIdent=declarator '(' params=parameter_list ')' ';' {
         (* TODO: validate declSpecs *)
         let (cl, ident) = clAndIdent
-        FunDecl<_>(declSpecs, ident, params, StatementBlock<_>([]))
+        FunDecl<Lang>(declSpecs, ident, params, StatementBlock<_>(new ResizeArray<_>()))
     }
 
 (* Declaration specifiers *)
@@ -31,17 +33,17 @@ function_definition: (* FunDecl *)
 declaration_specifier_list: (* DeclSpecifierPack *)
     specs=declaration_specifier+ {
         let declPack = new DeclSpecifierPack<_>()
-        List.fold (fun f -> f declPack) specs
+        List.iter (fun f -> f declPack) specs
         declPack
     }
 
 declaration_specifier: (* DeclSpecifierPack -> void *)
-    x=function_qualifier { fun declPack -> declPack.FunQual = x }
-    | x=address_space_qualifier { fun declPack -> declPack.AddressSpaceQual = x }
-    | x=access_qualifier { fun declPack -> declPack.AccessQual = x }
-    | x=storage_class_specifier { fun declPack -> declPack.StorageClassSpec = x }
-    | x=type_specifier { fun declPack -> declPack.Type = x }
-    | x=type_qualifier { fun declPack -> declPack.AddTypeQual x }
+    x=function_qualifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.FunQual <- Some x }
+    | x=address_space_qualifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.AddressSpaceQual <- x }
+    | x=access_qualifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.AccessQual <- Some x }
+    | x=storage_class_specifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.StorageClassSpec <- Some x }
+    | x=type_specifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.Type <- Some x }
+    | x=type_qualifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.AddTypeQual x }
 
 function_qualifier: (* FunQualifier *)
     KERNEL { Kernel }
@@ -63,28 +65,32 @@ storage_class_specifier: (* StorageClassSpecifier *)
     | STATIC { Static } (* only for non-kernel functions, global variables declared in program scope and variables inside a function declared in the global or constant address space *)
 
 type_specifier: (* Type *)
+    t=primitive_type_specifier { t :> Type<_> }
+    | s=struct_or_union_specifier { StructType<_>(Some s) :> Type<_> }
+
+primitive_type_specifier: (* PrimitiveType *)
     BOOL { PrimitiveType<_>(Bool) }
     | CHAR { PrimitiveType<_>(Char) } | SHORT { PrimitiveType<_>(Short) }
     | INT { PrimitiveType<_>(Int) } | LONG { PrimitiveType<_>(Long) }
     | UCHAR { PrimitiveType<_>(UChar) } | USHORT { PrimitiveType<_>(UShort) }
     | UINT { PrimitiveType<_>(UInt) } | ULONG { PrimitiveType<_>(ULong) }
     | FLOAT { PrimitiveType<_>(Float) } | DOUBLE { PrimitiveType<_>(Double) } | HALF { PrimitiveType<_>(Half) }
-    | SIGNED t=type_specifier {
+    | SIGNED t=primitive_type_specifier {
         match t with
-        | t when t :? PrimitiveType<_> ->
+        | t when (t :? PrimitiveType<_>) ->
             match (t :?> PrimitiveType<_>).Type with
             | Char | Short | Int | Long -> t
-            | _ -> failwithf "Fatal: could not parse 'signed %s'" t.ToString() |> ToLower
+            | _ -> t.ToString().ToLower() |> failwithf "Fatal: could not parse \'signed %s\'" 
     }
-    | UNSIGNED t=type_specifier {
+    | UNSIGNED t=primitive_type_specifier {
         match t with
-        | t when t :? PrimitiveType<_> ->
+        | t when (t :? PrimitiveType<_>) ->
             match (t :?> PrimitiveType<_>).Type with
             | Char -> PrimitiveType<_>(UChar)
             | Short -> PrimitiveType<_>(UShort)
             | Int -> PrimitiveType<_>(UInt)
             | Long -> PrimitiveType<_>(ULong)
-            | _ -> failwithf "Fatal: could not parse 'unsigned %s'" t.ToString() |> ToLower
+            | _ -> t.ToString().ToLower() |> failwithf "Fatal: could not parse \'unsigned %s\'" 
     }
     (* | SIZE_T | PTRDIFF_T | INTPTR_T | UINTPTR_T *)
     | VOID { PrimitiveType<_>(Void) }
@@ -99,14 +105,13 @@ type_specifier: (* Type *)
     | CLK_EVENT_T | RESERVE_ID_T | EVENT_T
     | CL_MEM_FENCE_FLAGS *)
     | t=TYPE_NAME { PrimitiveType<_>(TypeName t) }
-    | s=struct_or_union_specifier { StructType<_>(Some s) }
     (* | enum_specifier *)
     (* omitted: reserved data types (OpenCL C 2.0, section 6.1.4) *)
 
 type_qualifier: (* TypeQualifier *)
-    CONST { Const }
-    | RESTRICT { Restrict }
-    | VOLATILE { Volatile }
+    CONST { TypeQualifier.Const }
+    | RESTRICT { TypeQualifier.Restrict }
+    | VOLATILE { TypeQualifier.Volatile }
 
 (* Declarator *)
 
@@ -115,9 +120,9 @@ declarator: (* ((Type -> Type) option, string) *)
         let (dcl, ident) = dclAndIdent
         match pcl, dcl with
         | None,     None     -> None, ident
-        | Some pcl, None     -> pcl, ident
-        | None,     Some dcl -> dcl, ident
-        | Some pcl, Some dcl -> pcl <| dcl, ident
+        | Some pcl, None     -> Some pcl, ident
+        | None,     Some dcl -> Some dcl, ident
+        | Some pcl, Some dcl -> Some (pcl >> dcl), ident
     }
 (* NB: test the examples from C99, 6.7.5.1.3 at page 115 *)
 
@@ -126,38 +131,30 @@ direct_declarator: (* ((Type -> Type) option, string) *)
     | clAndIdent=direct_declarator '[' ']' {
         let (cl, ident) = clAndIdent
         match cl with
-        | None -> fun t -> ArrayType<_>(t), ident
-        | Some cl -> fun t -> ArrayType<_>(cl t), ident
+        | None -> Some (fun t -> ArrayType<_>(t) :> Type<_>), ident
+        | Some cl -> Some (fun t -> ArrayType<_>(cl t) :> Type<_>), ident
     }
 
 pointer: (* Type -> Type *)
-    '*' qs=type_qualifier_list? cl=pointer? {
+    '*' qs=type_qualifier* cl=pointer? {
         match cl with
-        | None -> fun t -> RefType<_>(t, qs)
-        | Some cl -> fun t -> RefType<_>(cl t, qs)
+        | None -> fun t -> new RefType<_>(t, qs) :> Type<_>
+        | Some cl -> fun t -> new RefType<_>(cl t, qs) :> Type<_>
     }
-
-type_qualifier_list: (* TypeQualifier list *)
-    type_qualifier+
+    
 
 parameter_list: (* FunFormalArg list *)
-    not_empty_comma_list<parameter_declaration>
+    { [] } | not_empty_comma_list<parameter_declaration>
 
 parameter_declaration: (* FunFormalArg *)
-    declSpecs=declaration_specifier_list clAndIdent=declarator {
+    {declSpecs:DeclSpecifierPack<_>}=declaration_specifier_list clAndIdent=declarator {
         let (cl, ident) = clAndIdent
         match cl with
         | None -> FunFormalArg<_>(declSpecs, ident)
         | Some cl ->
             match declSpecs.Type with
             | Some oldType ->
-                let newType = cl oldType
-                let newDeclSpecs = new DeclSpecifierPack<_>(declSpecs.FunQual,
-                                                            declSpecs.AddressSpaceQual,
-                                                            declSpecs.AccessQual,
-                                                            declSpecs.StorageClassSpec,
-                                                            newType,
-                                                            declSpecs.TypeQual)
+                declSpecs.Type <- Some <| cl oldType
                 FunFormalArg<_>(declSpecs, ident)
             | None -> failwithf "Fatal: no type definition found for %s" ident
     }
