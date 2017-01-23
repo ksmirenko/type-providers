@@ -44,10 +44,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <None Include="OpenCLLexer.fsl" />
-    <None Include="OpenCLParser.yrd" />
-    <Compile Include="OpenCLParser.yrd.fs" />
-    <Compile Include="OpenCLLexer.fsl.fs" />
+    <None Include="Lexer.fsl" />
+    <None Include="Parser.yrd" />
+    <Compile Include="Parser.yrd.fs" />
+    <Compile Include="Lexer.fsl.fs" />
+    <Compile Include="Validator.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
@@ -73,7 +74,7 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

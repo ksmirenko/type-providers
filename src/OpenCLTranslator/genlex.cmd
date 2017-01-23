@@ -1,1 +1,1 @@
-..\..\packages\YC.SDK\tools\YC.FSLEx.exe OpenCLLexer.fsl --unicode -o OpenCLLexer.fsl.fs 
+..\..\packages\YC.SDK\tools\YC.FSLEx.exe Lexer.fsl --unicode -o Lexer.fsl.fs 

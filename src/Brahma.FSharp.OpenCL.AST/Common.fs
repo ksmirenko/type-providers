@@ -26,3 +26,5 @@ type Statement<'lang> () =
 [<AbstractClass>]
 type TopDef<'lang>()=
     inherit Node<'lang>()
+
+type Lang = | OpenCL
