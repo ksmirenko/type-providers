@@ -20,10 +20,10 @@ program: (* FunDecl list *)
     function_definition+
 
 function_definition: (* FunDecl *)
-    declSpecs=declaration_specifier_list clAndIdent=declarator '(' params=parameter_list ')' ';' {
+    declSpecs=declaration_specifier_list clAndIdent=declarator '(' pars=parameter_list ')' ';' {
         let (cl, ident) = clAndIdent
         match cl with
-        | None -> FunDecl<Lang>(declSpecs, ident, params, StatementBlock<_>(new ResizeArray<_>()))
+        | None -> FunDecl<Lang>(declSpecs, ident, pars, StatementBlock<_>(new ResizeArray<_>()))
         | Some _ -> failwithf "Fatal: %s is not a valid function declarator" ident // no pointers or arrays allowed
     }
 
@@ -37,11 +37,36 @@ declaration_specifier_list: (* DeclSpecifierPack *)
     }
 
 declaration_specifier: (* DeclSpecifierPack -> void *)
-    x=function_qualifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.FunQual <- Some x }
-    | x=address_space_qualifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.AddressSpaceQual <- x }
-    | x=access_qualifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.AccessQual <- Some x }
-    | x=storage_class_specifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.StorageClassSpec <- Some x }
-    | x=type_specifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.Type <- Some x }
+    x=function_qualifier {
+        fun (declPack:DeclSpecifierPack<_>) ->
+            match declPack.FunQual with
+            | None -> declPack.FunQual <- Some x
+            | Some _ -> failwith "A declaration can't have more than one function qualifier"
+    }
+    | x=address_space_qualifier {
+        fun (declPack:DeclSpecifierPack<_>) ->
+            match declPack.AddressSpaceQual with
+            | AddressSpaceQualifier.Default -> declPack.AddressSpaceQual <- x
+            | _ -> failwith "A declaration can't have more than one address space qualifier"
+    }
+    | x=access_qualifier {
+        fun (declPack:DeclSpecifierPack<_>) ->
+            match declPack.AccessQual with
+            | None -> declPack.AccessQual <- Some x
+            | Some _ -> failwith "A declaration can't have more than one access qualifier"
+    }
+    | x=storage_class_specifier {
+        fun (declPack:DeclSpecifierPack<_>) ->
+            match declPack.StorageClassSpec with
+            | None -> declPack.StorageClassSpec <- Some x
+            | Some _ -> failwith "A declaration can't have more than one storage class specifier"
+    }
+    | x=type_specifier {
+        fun (declPack:DeclSpecifierPack<_>) ->
+            match declPack.Type with
+            | None -> declPack.Type <- Some x
+            | Some _ -> failwith "A declaration can't have more than one type specifier"
+    }
     | x=type_qualifier { fun (declPack:DeclSpecifierPack<_>) -> declPack.AddTypeQual x }
 
 function_qualifier: (* FunQualifier *)
@@ -79,7 +104,8 @@ primitive_type_specifier: (* PrimitiveType *)
         | t when (t :? PrimitiveType<_>) ->
             match (t :?> PrimitiveType<_>).Type with
             | Char | Short | Int | Long -> t
-            | _ -> t.ToString().ToLower() |> failwithf "Fatal: could not parse \'signed %s\'" 
+            | _ -> t.ToString().ToLower() |> failwithf "Fatal: could not parse \'signed %s\'"
+        | _ -> failwith "Fatal: only char, short, int, long can be declared as signed"
     }
     | UNSIGNED t=primitive_type_specifier {
         match t with
@@ -90,6 +116,7 @@ primitive_type_specifier: (* PrimitiveType *)
             | Int -> PrimitiveType<_>(UInt)
             | Long -> PrimitiveType<_>(ULong)
             | _ -> t.ToString().ToLower() |> failwithf "Fatal: could not parse \'unsigned %s\'" 
+        | _ -> failwith "Fatal: only char, short, int, long can be declared as signed"
     }
     (* | SIZE_T | PTRDIFF_T | INTPTR_T | UINTPTR_T *)
     | VOID { PrimitiveType<_>(Void) }
