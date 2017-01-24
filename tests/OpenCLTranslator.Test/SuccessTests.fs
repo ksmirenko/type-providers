@@ -1,16 +1,11 @@
 ﻿namespace OpenCLTranslator.Test
 
 open NUnit.Framework
-open OpenCLTranslator.Main
 open OpenCLTranslator.Test.Helpers
 open Brahma.FSharp.OpenCL.AST
 
 [<TestFixture>]
 type SuccessTests() =
-    let testSuccess code res =
-        let actualRes = parseCLCode code
-        Assert.AreEqual(res, actualRes)
-
     [<Test>]
     member this.``Single parameterless kernel``() =
         let code = "__kernel void epicKernel() { return; }"

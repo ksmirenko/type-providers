@@ -1,18 +1,11 @@
 ﻿namespace OpenCLTranslator.Test
 
 open NUnit.Framework
-open OpenCLTranslator.Main
 open OpenCLTranslator.Test.Helpers
 open Brahma.FSharp.OpenCL.AST
 
 [<TestFixture>]
 type RealWorldTests() =
-    let emptyBody = new StatementBlock<_>(new ResizeArray<_>())
-
-    let testSuccess code res =
-        let actualRes = parseCLCode code
-        Assert.AreEqual(res, actualRes)
-
     [<Test>]
     member this.``Matrix * matrix``() =
         let code = "__kernel void myGEMM1(const int M, const int N, const int K,\n\
