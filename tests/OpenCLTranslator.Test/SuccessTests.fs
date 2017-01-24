@@ -5,7 +5,7 @@ open OpenCLTranslator.Main
 open Brahma.FSharp.OpenCL.AST
 
 [<TestFixture>]
-type TestClass() =
+type SuccessTests() =
     let emptyBody = new StatementBlock<_>(new ResizeArray<_>())
 
     let testSuccess code res =

@@ -11,9 +11,6 @@ nuget FSharpx.Collections.Experimental 1.15.1 framework: >= net451
 nuget Mono.Addins 1.2 framework: >= net451
 nuget Newtonsoft.Json 9.0.1
 
-nuget NuGet.CommandLine
-nuget NUnit 2.6.4
-
 nuget OpenCL.Net 2.2.9.0
 nuget Brahma.FSharp 1.0.1
 
@@ -22,3 +19,8 @@ nuget YC.QuickGraph 3.7.3 framework: >= net451
 nuget YC.SDK 0.1.0.0-beta2 beta framework: >= net451
 nuget YC.SDK.Runtime 0.1.0.0-beta2 beta framework: >= net451
 nuget YC.Utils.SourceText 0.3.0.1 framework: >= net451
+
+group Test
+    source https://nuget.org/api/v2
+    nuget NUnit.Console
+    nuget NUnit 2.6.4

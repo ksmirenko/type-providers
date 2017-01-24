@@ -24,6 +24,10 @@ let checkFunDecl (f:FunDecl<Lang>) =
         if p.DeclSpecs.Type.IsNone
             then failwithf "Fatal: return type missing for parameter %s of function %s" p.Name f.Name
 
+        // parameters can't be __kernel
+        if p.DeclSpecs.FunQual = Some Kernel
+            then failwithf "Fatal: parameter %s of function %s can't be kernel" p.Name f.Name
+
         // no storage class specifiers (TYPEDEF, EXTERN, STATIC) are allowed for parameters
         if p.DeclSpecs.StorageClassSpec.IsSome
             then failwithf "Fatal: unexpected storage class specifier for parameter %s of function %s" p.Name f.Name
