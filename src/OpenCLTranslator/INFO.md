@@ -6,6 +6,8 @@
 * anonymous structs as function parameters are not supported
 * `__attribute__` specifiers for kernel functions are not supported
 * `inline` function specifier is not supported in OpenCL C
+* Unicode in identifiers is not supported
+* type casting in function definitions is not supported
 
 ### C99 keywords:
 

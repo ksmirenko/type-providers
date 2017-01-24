@@ -24,7 +24,12 @@ function_definition: (* FunDecl *)
         let (cl, ident) = clAndIdent
         match cl with
         | None -> FunDecl<Lang>(declSpecs, ident, pars, StatementBlock<_>(new ResizeArray<_>()))
-        | Some _ -> failwithf "Fatal: %s is not a valid function declarator" ident // no pointers or arrays allowed
+        | Some cl ->
+            match declSpecs.Type with
+            | Some oldType ->
+                declSpecs.Type <- Some <| cl oldType
+                FunDecl<Lang>(declSpecs, ident, pars, StatementBlock<_>(new ResizeArray<_>()))
+            | None -> failwithf "Fatal: no type definition found for %s" ident
     }
 
 (* Declaration specifiers *)

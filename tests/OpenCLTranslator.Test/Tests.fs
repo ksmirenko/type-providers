@@ -146,3 +146,59 @@ type TestClass() =
                     emptyBody
                 )
         testSuccess code [f]
+
+    [<Test>]
+    member this.``Arrays and pointers, returning pointer``() =
+        //let code = "unsigned char* foo(int* b[])\n{}"
+        let code = "unsigned char* foo(double a[], int* b[])\n{}"
+        let f = FunDecl<Lang>(
+                    DeclSpecifierPack<Lang>(
+                        typeSpec=RefType<Lang>(PrimitiveType<Lang>(UChar), [])
+                    ),
+                    "foo",
+                    [
+                        FunFormalArg<Lang>(
+                            DeclSpecifierPack<Lang>(
+                                typeSpec=ArrayType<Lang>(PrimitiveType<Lang>(Double))
+                            ),
+                            "a"
+                        );
+                        FunFormalArg<Lang>(
+                            DeclSpecifierPack<Lang>(
+                                typeSpec=ArrayType<Lang>(RefType<Lang>(PrimitiveType<Lang>(Int), []))
+                            ),
+                            "b"
+                        )
+                    ],
+                    emptyBody
+                )
+        testSuccess code [f]
+
+    [<Test>]
+    member this.``Structs``() =
+        let code = "__kernel void foo(struct epicStruct a, struct epicStruct b[],\
+                    struct epicStruct *c, struct epicStruct* d[])\n{ return; }"
+        let epicStructType = StructType<Lang>(Some <| Struct<Lang>("epicStruct", []))
+        let f = FunDecl<Lang>(
+                    DeclSpecifierPack<Lang>(
+                        funQual=Kernel,
+                        typeSpec=PrimitiveType<Lang>(Void)
+                    ),
+                    "foo",
+                    [
+                        FunFormalArg<Lang>(
+                            DeclSpecifierPack<Lang>(typeSpec=epicStructType), "a"
+                        );
+                        FunFormalArg<Lang>(
+                            DeclSpecifierPack<Lang>(typeSpec=ArrayType<Lang>(epicStructType)), "b"
+                        );
+                        FunFormalArg<Lang>(
+                            DeclSpecifierPack<Lang>(typeSpec=RefType<Lang>(epicStructType, [])), "c"
+                        );
+                        FunFormalArg<Lang>(
+                            DeclSpecifierPack<Lang>(typeSpec=ArrayType<Lang>(RefType<Lang>(epicStructType, []))), "d"
+                        )
+                    ],
+                    emptyBody
+                )
+        testSuccess code [f]
