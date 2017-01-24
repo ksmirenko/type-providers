@@ -121,7 +121,7 @@ primitive_type_specifier: (* PrimitiveType *)
             | Short -> PrimitiveType<_>(UShort)
             | Int -> PrimitiveType<_>(UInt)
             | Long -> PrimitiveType<_>(ULong)
-            | _ -> t.ToString().ToLower() |> failwithf "Fatal: could not parse \'unsigned %s\'" 
+            | _ -> t.ToString().ToLower() |> failwithf "Fatal: could not parse \'unsigned %s\'"
         | _ -> failwith "Fatal: only char, short, int, long can be declared as signed"
     }
     (* | SIZE_T | PTRDIFF_T | INTPTR_T | UINTPTR_T *)
@@ -156,7 +156,6 @@ declarator: (* ((Type -> Type) option, string) *)
         | None,     Some dcl -> Some dcl, ident
         | Some pcl, Some dcl -> Some (pcl >> dcl), ident
     }
-(* NB: test the examples from C99, 6.7.5.1.3 at page 115 *)
 
 direct_declarator: (* ((Type -> Type) option, string) *)
     ident=IDENTIFIER { None, ident }
