@@ -28,6 +28,6 @@ let processText (code) =
 
     tree.[0]
 
-let funDecls = processText("__kernel void foo(__global const int *bar, uint baz);")
+let funDecls = processText("__kernel void foo(__global const int *bar, uint baz) {\n int foo = 1; return; \n}")
 List.iter (fun x -> checkFunDecl x) funDecls
 printfn "%A" funDecls
