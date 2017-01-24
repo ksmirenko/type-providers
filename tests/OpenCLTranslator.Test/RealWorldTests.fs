@@ -2,6 +2,7 @@
 
 open NUnit.Framework
 open OpenCLTranslator.Main
+open OpenCLTranslator.Test.Helpers
 open Brahma.FSharp.OpenCL.AST
 
 [<TestFixture>]
@@ -29,45 +30,48 @@ type RealWorldTests() =
                         // Store the result\n\
                         C[globalCol*M + globalRow] = acc;\n\
                     }"
-        let f = FunDecl<Lang>(
-                    DeclSpecifierPack<Lang>(
+        let f = func
+                    (DeclSpecifierPack<Lang>(
                         funQual=Kernel,
                         typeSpec=PrimitiveType<Lang>(Void)
-                    ),
-                    "myGEMM1",
+                    ))
+                    "myGEMM1"
                     [
-                        FunFormalArg<Lang>(
-                            DeclSpecifierPack<Lang>(typeSpec=PrimitiveType<Lang>(Int), typeQuals=[TypeQualifier.Const]),
-                            "M");
-                        FunFormalArg<Lang>(
-                            DeclSpecifierPack<Lang>(typeSpec=PrimitiveType<Lang>(Int), typeQuals=[TypeQualifier.Const]),
-                            "N");
-                        FunFormalArg<Lang>(
-                            DeclSpecifierPack<Lang>(typeSpec=PrimitiveType<Lang>(Int), typeQuals=[TypeQualifier.Const]),
-                            "K");
-                        FunFormalArg<Lang>(
-                            DeclSpecifierPack<Lang>(
+                        arg
+                            (DeclSpecifierPack<Lang>(
+                                typeSpec=PrimitiveType<Lang>(Int), typeQuals=[TypeQualifier.Const]))
+                            "M";
+                        arg
+                            (DeclSpecifierPack<Lang>(
+                                typeSpec=PrimitiveType<Lang>(Int), typeQuals=[TypeQualifier.Const]
+                            ))
+                            "N";
+                        arg
+                            (DeclSpecifierPack<Lang>(
+                                typeSpec=PrimitiveType<Lang>(Int), typeQuals=[TypeQualifier.Const]
+                            ))
+                            "K";
+                        arg
+                            (DeclSpecifierPack<Lang>(
                                 addrSpaceQual=Global,
                                 typeSpec=RefType<Lang>(PrimitiveType<Lang>(Float), []),
                                 typeQuals=[TypeQualifier.Const]
-                            ),
-                            "A");
-                        FunFormalArg<Lang>(
-                            DeclSpecifierPack<Lang>(
+                            ))
+                            "A";
+                        arg
+                            (DeclSpecifierPack<Lang>(
                                 addrSpaceQual=Global,
                                 typeSpec=RefType<Lang>(PrimitiveType<Lang>(Float), []),
                                 typeQuals=[TypeQualifier.Const]
-                            ),
-                            "B");
-                        FunFormalArg<Lang>(
-                            DeclSpecifierPack<Lang>(
+                            ))
+                            "B";
+                        arg
+                            (DeclSpecifierPack<Lang>(
                                 addrSpaceQual=Global,
                                 typeSpec=RefType<Lang>(PrimitiveType<Lang>(Float), [])
-                            ),
-                            "C")
-                    ],
-                    emptyBody
-                )
+                            ))
+                            "C"
+                    ]
         testSuccess code [f]
 
     [<Test>]
@@ -85,37 +89,35 @@ type RealWorldTests() =
                        }\n\
                        y[i] = sum;\n\
                    }"
-        let f = FunDecl<Lang>(
-                    DeclSpecifierPack<Lang>(
+        let f = func
+                    (DeclSpecifierPack<Lang>(
                         funQual=Kernel,
                         typeSpec=PrimitiveType<Lang>(Void)
-                    ),
-                    "matvec",
+                    ))
+                    "matvec"
                     [
-                        FunFormalArg<Lang>(
-                            DeclSpecifierPack<Lang>(
+                        arg
+                            (DeclSpecifierPack<Lang>(
                                 addrSpaceQual=Global,
                                 typeSpec=RefType<Lang>(PrimitiveType<Lang>(Float), []),
                                 typeQuals=[TypeQualifier.Const]
-                            ),
-                            "A");
-                        FunFormalArg<Lang>(
-                            DeclSpecifierPack<Lang>(
+                            ))
+                            "A";
+                        arg
+                            (DeclSpecifierPack<Lang>(
                                 addrSpaceQual=Global,
                                 typeSpec=RefType<Lang>(PrimitiveType<Lang>(Float), []),
                                 typeQuals=[TypeQualifier.Const]
-                            ),
-                            "x");
-                        FunFormalArg<Lang>(
-                            DeclSpecifierPack<Lang>(typeSpec=PrimitiveType<Lang>(UInt)),
-                            "ncols");
-                        FunFormalArg<Lang>(
-                            DeclSpecifierPack<Lang>(
+                            ))
+                            "x";
+                        arg
+                            (tdecl <| PrimitiveType<Lang>(UInt))
+                            "ncols";
+                        arg
+                            (DeclSpecifierPack<Lang>(
                                 addrSpaceQual=Global,
                                 typeSpec=RefType<Lang>(PrimitiveType<Lang>(Float), [])
-                            ),
-                            "y")
-                    ],
-                    emptyBody
-                )
+                            ))
+                            "y"
+                    ]
         testSuccess code [f]

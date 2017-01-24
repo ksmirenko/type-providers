@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Helpers.fs" />
     <Compile Include="SuccessTests.fs" />
     <Compile Include="ParseErrorTests.fs" />
     <Compile Include="RealWorldTests.fs" />
