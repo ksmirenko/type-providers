@@ -46,6 +46,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="SuccessTests.fs" />
     <Compile Include="ParseErrorTests.fs" />
+    <Compile Include="RealWorldTests.fs" />
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
