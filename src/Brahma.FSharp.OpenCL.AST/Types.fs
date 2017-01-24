@@ -43,6 +43,12 @@ type PrimitiveType<'lang>(pType:PTypes<'lang>) =
     override this.Children = []
     member this.Type = pType
 
+    override this.Equals(other) =
+        match other with
+        | :? PrimitiveType<'lang> as o ->
+            this.Type.Equals(o.Type)
+        | _ -> false
+
 // TODO: review; size has been made optional with default value zero
 type ArrayType<'lang>(baseType:Type<'lang>, ?size:int) =
     inherit Type<'lang>()
@@ -52,6 +58,13 @@ type ArrayType<'lang>(baseType:Type<'lang>, ?size:int) =
         | None -> 0
     override this.Children = []
     member this.BaseType = baseType
+
+    override this.Equals(other) =
+        match other with
+        | :? ArrayType<'lang> as o ->
+            this.BaseType.Equals(o.BaseType)
+            // NB: size is omitted in this check
+        | _ -> false
 
 [<Struct>]
 type StructField<'lang> =
@@ -65,6 +78,12 @@ type Struct<'lang>(name: string, fields: List<StructField<'lang>>) =
     override this.Children = []
     member this.Fields = fields
     member this.Name = name
+    override this.Equals(other) =
+        match other with
+        | :? Struct<'lang> as o ->
+            this.Name.Equals(o.Name)
+            // NB: fields are omitted in this check!
+        | _ -> false
 
 type StructType<'lang>(decl)=
     inherit Type<'lang>()
@@ -75,9 +94,23 @@ type StructType<'lang>(decl)=
         | Some decl -> decl.Fields |> List.sumBy (fun f -> f.FType.Size)
         | None -> 0
 
+    override this.Equals(other) =
+        match other with
+        | :? StructType<'lang> as o ->
+            this.Declaration.Equals(o.Declaration)
+            // NB: size is omitted in this check
+        | _ -> false
+
 type RefType<'lang>(baseType:Type<'lang>, typeQuals:TypeQualifier<'lang> list) =
     inherit Type<'lang>()
     override this.Size = baseType.Size
     override this.Children = []
     member this.BaseType = baseType
     member this.TypeQuals = typeQuals
+
+    override this.Equals(other) =
+        match other with
+        | :? RefType<'lang> as o ->
+            this.BaseType.Equals(o.BaseType)
+            && this.TypeQuals.Equals(o.TypeQuals)
+        | _ -> false

@@ -6,7 +6,7 @@ open Yard.Generators.Common.AST
 open Yard.Generators.RNGLR.Parser
 open Brahma.FSharp.OpenCL.AST
 
-let processText (code) =
+let parseCLCode (code) =
     let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<_>.FromString code
     let allTokens =
         seq
@@ -26,8 +26,9 @@ let processText (code) =
         | Success (sppf, t, d) -> (OpenCLTranslator.Parser.translate translateArgs sppf d) :> List<List<FunDecl<Lang>>>
         | Error (pos,errs,msg,dbg,_) -> failwithf "Error: %A    %A \n %A"  pos errs msg
 
-    tree.[0]
+    let res = tree.[0]
+    List.iter (fun x -> checkFunDecl x) res
+    res
 
-let funDecls = processText("__kernel void foo(__global const int *bar, uint baz) {\n int foo = 1; return; \n}")
-List.iter (fun x -> checkFunDecl x) funDecls
+let funDecls = parseCLCode("__kernel void foo(__global const int *bar, uint baz) {\n int foo = 1; return; \n}")
 printfn "%A" funDecls

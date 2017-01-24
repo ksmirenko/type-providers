@@ -168,7 +168,8 @@ pointer: (* Type -> Type *)
         | None -> fun t -> new RefType<_>(t, qs) :> Type<_>
         | Some cl -> fun t -> new RefType<_>(cl t, qs) :> Type<_>
     }
-    
+
+(* Parameters *)
 
 parameter_list: (* FunFormalArg list *)
     { [] } | not_empty_comma_list<parameter_declaration>

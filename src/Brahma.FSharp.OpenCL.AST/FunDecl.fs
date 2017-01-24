@@ -22,6 +22,13 @@ type FunFormalArg<'lang>(declSpecs:DeclSpecifierPack<'lang>, name:string) =
     member this.DeclSpecs = declSpecs
     member this.Name = name
 
+    override this.Equals(other) =
+        match other with
+        | :? FunFormalArg<'lang> as o ->
+            this.DeclSpecs.Equals(o.DeclSpecs)
+            && this.Name.Equals(o.Name)
+        | _ -> false
+
 // TODO: change in Brahma.FSharp
 type FunDecl<'lang>(declSpecs:DeclSpecifierPack<'lang>, name:string, args:List<FunFormalArg<'lang>>, body:Statement<'lang>) =
     inherit TopDef<'lang>()
@@ -30,4 +37,13 @@ type FunDecl<'lang>(declSpecs:DeclSpecifierPack<'lang>, name:string, args:List<F
     member this.Name = name
     member this.Args = args
     member this.Body = body
+
+    override this.Equals(other) =
+        match other with
+        | :? FunDecl<'lang> as o ->
+            this.DeclSpecs.Equals(o.DeclSpecs)
+            && this.Name.Equals(o.Name)
+            && this.Args.Equals(o.Args)
+            // NB: body is omitted in this check
+        | _ -> false
 
