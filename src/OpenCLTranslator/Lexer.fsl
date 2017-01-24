@@ -9,6 +9,7 @@ let lexeme lexbuf = LexBuffer<_>.LexemeString(lexbuf)
 let digit = ['0'-'9']
 let whitespace = [' ' '\t' '\r' '\n']
 let chars = ['a'-'z'] | ['A'-'Z']
+let underscore = '_'
 let specialChars = [',' ';' '*' '(' ')' '[' ']']
 
 rule token = parse
@@ -58,12 +59,12 @@ rule token = parse
 
 | "struct" { STRUCT(lexeme lexbuf) }
 
-| chars (chars | digit)+ { IDENTIFIER(lexeme lexbuf) }
+| (chars | underscore) (chars | digit | underscore)* { IDENTIFIER(lexeme lexbuf) }
 
 | '{' { skipBody 1 lexbuf }
 
 | eof { RNGLR_EOF ("")}
-| _ {  failwithf "unexpected input: %s" <| lexeme lexbuf }
+| _ {  failwithf "Unexpected input: %s" <| lexeme lexbuf }
 
 and skipBody lBraces = parse
 | '{'           { (skipBody (lBraces + 1) lexbuf) }

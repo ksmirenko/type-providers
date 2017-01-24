@@ -33,6 +33,7 @@ declaration_specifier_list: (* DeclSpecifierPack *)
     specs=declaration_specifier+ {
         let declPack = new DeclSpecifierPack<_>()
         List.iter (fun f -> f declPack) specs
+        declPack.TypeQuals <- List.sort declPack.TypeQuals
         declPack
     }
 
@@ -165,8 +166,8 @@ direct_declarator: (* ((Type -> Type) option, string) *)
 pointer: (* Type -> Type *)
     '*' qs=type_qualifier* cl=pointer? {
         match cl with
-        | None -> fun t -> new RefType<_>(t, qs) :> Type<_>
-        | Some cl -> fun t -> new RefType<_>(cl t, qs) :> Type<_>
+        | None -> fun t -> new RefType<_>(t, List.sort qs) :> Type<_>
+        | Some cl -> fun t -> new RefType<_>(cl t, List.sort qs) :> Type<_>
     }
 
 (* Parameters *)
