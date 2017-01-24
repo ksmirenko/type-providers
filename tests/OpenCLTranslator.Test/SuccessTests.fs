@@ -149,7 +149,6 @@ type SuccessTests() =
 
     [<Test>]
     member this.``Arrays and pointers, returning pointer``() =
-        //let code = "unsigned char* foo(int* b[])\n{}"
         let code = "unsigned char* foo(double a[], int* b[])\n{}"
         let f = FunDecl<Lang>(
                     DeclSpecifierPack<Lang>(
