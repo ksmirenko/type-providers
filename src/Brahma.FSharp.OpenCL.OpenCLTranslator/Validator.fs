@@ -1,4 +1,4 @@
-﻿module Validator
+module Brahma.FSharp.OpenCL.OpenCLTranslator.Validator
 
 open Brahma.FSharp.OpenCL.AST
 
