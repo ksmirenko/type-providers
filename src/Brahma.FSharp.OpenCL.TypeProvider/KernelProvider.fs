@@ -10,7 +10,7 @@ open System.Reflection
 type KernelProvider(config : TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces ()
 
-    let nspace = "TypeProviders.KernelProvider.Provided"
+    let nspace = "Brahma.FSharp.OpenCL.TypeProvider.Provided"
     let assembly = Assembly.GetExecutingAssembly()
 
     let kernelProvider = ProvidedTypeDefinition(assembly, nspace, "KernelProvider", Some(typeof<obj>))
@@ -19,24 +19,12 @@ type KernelProvider(config : TypeProviderConfig) as this =
 
     do kernelProvider.DefineStaticParameters(parameters, fun typeName args ->
         let filePath = args.[0] :?> string
-
-        let retProvider = ProvidedTypeDefinition(assembly, nspace, typeName, Some typeof<obj>, HideObjectMethods = true)
-
-        let kernelName, kernelParams = dummyParseKernel filePath
-
-        // Provide a method parametetized exactly as the kernel
-        let addKernelMethod kerName kerParams =
-            let kernelMethod =
-                ProvidedMethod(
-                    kerName,
-                    kerParams,
-                    typeof<Void>,
-                    IsStaticMethod = true,
-                    InvokeCode = (fun args -> <@@ ignore() @@>))
-            retProvider.AddMember kernelMethod
-
-        addKernelMethod kernelName kernelParams
-
+        let retProvider = ProvidedTypeDefinition(assembly,
+                                                 nspace,
+                                                 typeName,
+                                                 Some typeof<obj>,
+                                                 HideObjectMethods = true)
+        readKernels filePath |> List.iter retProvider.AddMember
         retProvider
     )
 

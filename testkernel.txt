@@ -1,7 +1,0 @@
-SampleFunc
-intParam
-int
-floatParam
-float
-anotherIntParam
-int

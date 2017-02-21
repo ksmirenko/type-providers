@@ -20,28 +20,6 @@ open Brahma.FSharp.OpenCL.OpenCLTranslator.Main
 open ProviderImplementation.ProvidedTypes
 open System
 
-let dummyParseKernel filePath =
-    let parseId _id =
-        match _id with
-        | "int" | "float" -> failwithf "%s is not a valid identifier" _id
-        | _ -> _id
-    let parseType _type =
-        match _type with
-        | "int"     -> typeof<int>
-        | "float"   -> typeof<float>
-        | _         -> failwithf "%s is not a valid type" _type
-    let rec foldParams outList inList =
-        match inList with
-        | [] -> outList |> List.rev
-        | _id::_type::rest ->
-            let id' = parseId _id
-            let type' = parseType _type
-            foldParams (ProvidedParameter(id', type')::outList) rest
-        | _ -> failwith "foldParams failed"
-    match System.IO.File.ReadLines(filePath) |> Seq.toList with
-    | kernelName::paramLines -> kernelName, (foldParams [] paramLines)
-    | _ -> failwith "couldn't parse kernel"
-
 let parsePrimitiveType pType =
     match pType with
     | Bool          -> typeof<bool>
@@ -66,12 +44,12 @@ let buildProvidedMethod (funDecl:FunDecl<Lang>) =
             | :? PrimitiveType<Lang> as t ->
                 parsePrimitiveType t.Type
             | :? ArrayType<Lang> as t ->
-                (parseType t.BaseType).MakeGenericType()
+                (parseType t.BaseType).MakeArrayType()
             | :? StructType<Lang> as t ->
                 // TODO
                 failwith "Not implemented yet"
             | :? RefType<Lang> as t ->
-                (parseType t.BaseType).MakePointerType()
+                (parseType t.BaseType).MakeByRefType()
             | _ -> failwithf "Unknown type: %A" t
         let parsedType =
             match funFormalArg.DeclSpecs.Type with
